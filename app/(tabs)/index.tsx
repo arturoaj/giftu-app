@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useIdioma } from '../../app/IdiomaContext';
@@ -41,22 +41,23 @@ export default function Login() {
 
   const handleOlvideContrasena = async () => {
     if (!email) {
-      Alert.alert(
-        t.error,
-        idioma === 'es' ? 'Ingresa tu correo primero' : 'Enter your email first'
-      );
+      Alert.alert(t.error, idioma === 'es' ? 'Ingresa tu correo primero' : 'Enter your email first');
       return;
     }
     try {
       await sendPasswordResetEmail(auth, email);
-      Alert.alert(
-        '✅',
-        idioma === 'es'
-          ? `Enviamos un link a ${email} para restablecer tu contraseña`
-          : `We sent a reset link to ${email}`
-      );
+      Alert.alert('✅', idioma === 'es' ? `Enviamos un link a ${email} para restablecer tu contraseña` : `We sent a reset link to ${email}`);
     } catch (error) {
       Alert.alert(t.error, idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      Alert.alert(t.error, idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
     }
   };
 
@@ -249,9 +250,7 @@ export default function Login() {
             </h1>
 
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', marginBottom: 48, lineHeight: 1.7, maxWidth: 320 }}>
-              {idioma === 'es'
-                ? 'La forma más fácil de coordinar regalos sin arruinar la sorpresa.'
-                : 'The easiest way to coordinate gifts without ruining the surprise.'}
+              {idioma === 'es' ? 'La forma más fácil de coordinar regalos sin arruinar la sorpresa.' : 'The easiest way to coordinate gifts without ruining the surprise.'}
             </p>
 
             {[
@@ -347,7 +346,7 @@ export default function Login() {
                 <div className="sep-line" />
               </div>
 
-              <button className="btn-google">
+              <button className="btn-google" onClick={handleGoogleLogin}>
                 <span style={{ fontSize: 18, fontWeight: 800, color: '#4285F4', fontFamily: 'Arial' }}>G</span>
                 <span>{idioma === 'es' ? 'Continuar con Google' : 'Continue with Google'}</span>
               </button>
@@ -365,6 +364,7 @@ export default function Login() {
     );
   }
 
+  // Versión móvil
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
