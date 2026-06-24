@@ -17,13 +17,11 @@ export default function RootLayout() {
     return (
       <IdiomaProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <View style={styles.container}>
-            <View style={styles.phone}>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-              </Stack>
-            </View>
+          <View style={styles.webContainer}>
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            </Stack>
           </View>
           <StatusBar style="auto" />
         </ThemeProvider>
@@ -45,18 +43,10 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  webContainer: {
     flex: 1,
-    backgroundColor: '#111',
-    alignItems: 'center' as any,
-    justifyContent: 'center' as any,
+    width: '100%' as any,
     minHeight: '100vh' as any,
-  },
-  phone: {
-    width: 390,
-    height: '100vh' as any,
-    overflow: 'hidden' as any,
     backgroundColor: '#0D0D0D',
-    boxShadow: '0 0 60px rgba(139, 92, 246, 0.3)' as any,
   },
 });
