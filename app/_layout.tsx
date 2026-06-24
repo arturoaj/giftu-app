@@ -6,7 +6,7 @@ import 'react-native-reanimated';
 import { IdiomaProvider } from './IdiomaContext';
 
 export const unstable_settings = {
-  anchor: 'login',
+  anchor: '(tabs)',
 };
 
 export default function RootLayout() {
