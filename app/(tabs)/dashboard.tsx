@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useIdioma } from '../../app/IdiomaContext';
 import { auth, db } from '../../firebaseConfig';
 
@@ -39,24 +39,36 @@ export default function Dashboard() {
   }, [usuario]);
 
   const handleLogout = async () => {
-    Alert.alert(
-      t.cerrarSesion,
-      t.cerrarSesionPregunta,
-      [
-        { text: t.cancelar, style: 'cancel' },
-        {
-          text: t.salir,
-          onPress: async () => {
-            try {
-              await signOut(auth);
-              router.replace('/(tabs)');
-            } catch (error) {
-              Alert.alert(t.error, 'No se pudo cerrar sesión');
+    if (Platform.OS === 'web') {
+      const confirmar = window.confirm(idioma === 'es' ? '¿Cerrar sesión?' : 'Sign out?');
+      if (confirmar) {
+        try {
+          await signOut(auth);
+          router.replace('/(tabs)');
+        } catch (error) {
+          window.alert('No se pudo cerrar sesión');
+        }
+      }
+    } else {
+      Alert.alert(
+        t.cerrarSesion,
+        t.cerrarSesionPregunta,
+        [
+          { text: t.cancelar, style: 'cancel' },
+          {
+            text: t.salir,
+            onPress: async () => {
+              try {
+                await signOut(auth);
+                router.replace('/(tabs)');
+              } catch (error) {
+                Alert.alert(t.error, 'No se pudo cerrar sesión');
+              }
             }
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const nombre = usuario?.displayName || usuario?.email?.split('@')[0] || 'Usuario';
@@ -67,10 +79,7 @@ export default function Dashboard() {
       <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <LinearGradient
-          colors={['#161B2E', '#0D0D0D']}
-          style={styles.header}
-        >
+        <LinearGradient colors={['#161B2E', '#0D0D0D']} style={styles.header}>
           <View style={styles.headerTop}>
             <View>
               <Text style={styles.saludo}>
@@ -108,31 +117,15 @@ export default function Dashboard() {
 
           {/* Botones de acción */}
           <View style={styles.accionesRow}>
-            <TouchableOpacity
-              style={styles.accionBoton}
-              onPress={() => router.push('/(tabs)/crear-evento')}
-            >
-              <LinearGradient
-                colors={['#8B5CF6', '#A855F7']}
-                style={styles.accionGradiente}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
+            <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/crear-evento')}>
+              <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.accionGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                 <Text style={styles.accionEmoji}>✨</Text>
                 <Text style={styles.accionTexto}>{idioma === 'es' ? 'Crear\nevento' : 'Create\nevent'}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.accionBoton}
-              onPress={() => router.push('/(tabs)/unirse')}
-            >
-              <LinearGradient
-                colors={['#F59E0B', '#FBBF24']}
-                style={styles.accionGradiente}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
+            <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/unirse')}>
+              <LinearGradient colors={['#F59E0B', '#FBBF24']} style={styles.accionGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
                 <Text style={styles.accionEmoji}>🔑</Text>
                 <Text style={styles.accionTexto}>{idioma === 'es' ? 'Unirse\ncon código' : 'Join\nwith code'}</Text>
               </LinearGradient>
