@@ -53,122 +53,118 @@ export default function Login() {
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           html, body { height: 100%; background: #0a0a0f; }
-          @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,-60px) scale(1.15); } }
-          @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-30px,40px) scale(0.9); } }
-          @keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(50px,30px) scale(1.1); } }
-          .input-field { transition: all 0.2s; }
-          .input-field:focus { outline: none; border-color: #8B5CF6 !important; box-shadow: 0 0 0 3px rgba(139,92,246,0.25) !important; }
-          .btn-entrar { transition: all 0.2s; }
-          .btn-entrar:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 12px 35px rgba(139,92,246,0.5) !important; }
-          .btn-registro { transition: all 0.2s; }
-          .btn-registro:hover { border-color: #8B5CF6 !important; color: #8B5CF6 !important; background: rgba(139,92,246,0.08) !important; }
-          .feature-card { transition: all 0.2s; }
-          .feature-card:hover { border-color: rgba(139,92,246,0.3) !important; background: rgba(139,92,246,0.06) !important; transform: translateX(4px); }
+          .input-web { transition: all 0.2s; background: #fff; border: none; border-radius: 10px; padding: 16px 18px; font-size: 15px; color: #111; width: 100%; outline: none; }
+          .input-web:focus { box-shadow: 0 0 0 3px rgba(139,92,246,0.3); }
+          .input-wrap { background: #1a1a2e; border-radius: 14px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+          .btn-entrar { width: 100%; padding: 16px; background: linear-gradient(90deg, #8B5CF6, #EC4899, #F59E0B); border: none; border-radius: 14px; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
+          .btn-entrar:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 8px 25px rgba(139,92,246,0.4); }
+          .btn-google { width: 48px; height: 48px; border-radius: 50%; background: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #4285F4; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); margin: 0 auto; }
+          .btn-google:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+          .feature-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; transition: all 0.2s; }
+          .feature-card:hover { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.25); }
+          .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+          .sep-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+          .link-purple { color: #8B5CF6; cursor: pointer; text-decoration: none; font-weight: 600; }
+          .link-purple:hover { text-decoration: underline; }
         `}</style>
 
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0a0a0f', fontFamily: "'Segoe UI', system-ui, sans-serif", position: 'relative', overflow: 'hidden' }}>
-
-          {/* Orbes animados de fondo */}
-          <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-            <div style={{ position: 'absolute', width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)', top: '-200px', left: '-150px', animation: 'float1 10s ease-in-out infinite' }} />
-            <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 70%)', bottom: '-100px', left: '35%', animation: 'float2 13s ease-in-out infinite' }} />
-            <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%)', top: '15%', right: '-80px', animation: 'float3 15s ease-in-out infinite' }} />
-          </div>
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0a0a0f', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
           {/* Columna izquierda */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 60px', position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: 540 }}>
+          <div style={{ flex: 1, background: 'linear-gradient(160deg, #1a0a2e 0%, #0f0a1e 50%, #0a0a0f 100%)', padding: '60px 56px', display: 'flex', flexDirection: 'column' as any, justifyContent: 'center' }}>
 
-              {/* Logo */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28 }}>
-                <span style={{ fontSize: 72 }}>🎁</span>
-                <h1 style={{ fontSize: 72, fontWeight: 900, color: '#F8FAFC', lineHeight: 1, letterSpacing: '-3px', fontFamily: 'inherit' }}>Giftu</h1>
-              </div>
-
-              <p style={{ fontSize: 24, color: '#8B5CF6', marginBottom: 56, fontWeight: 600, letterSpacing: '-0.5px' }}>✨ Regala sin spoilers</p>
-
-              {/* Features */}
-              <div style={{ display: 'flex', flexDirection: 'column' as any, gap: 16 }}>
-                {[
-                  { icon: '🎉', title: 'Listas de regalos', desc: 'Crea y comparte listas para cualquier ocasión especial' },
-                  { icon: '🔒', title: 'Sin spoilers', desc: 'El festejado nunca sabe quién regala qué' },
-                  { icon: '👥', title: 'En equipo', desc: 'Coordina fácilmente con familia y amigos' },
-                ].map((f, i) => (
-                  <div key={i} className="feature-card" style={{
-                    display: 'flex', alignItems: 'center', gap: 20, padding: '20px 24px',
-                    borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.07)', cursor: 'default',
-                  }}>
-                    <span style={{ fontSize: 32, minWidth: 40, textAlign: 'center' as any }}>{f.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: '#F8FAFC', marginBottom: 4 }}>{f.title}</div>
-                      <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>{f.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 40 }}>
+              <span style={{ fontSize: 48 }}>🎁</span>
+              <span style={{ fontSize: 32, fontWeight: 800, color: '#F8FAFC', letterSpacing: '-1px' }}>Giftu</span>
             </div>
+
+            {/* Headline */}
+            <div style={{ marginBottom: 20 }}>
+              <h1 style={{ fontSize: 56, fontWeight: 900, color: '#F8FAFC', lineHeight: 1.1, letterSpacing: '-2px', marginBottom: 0 }}>
+                Regala sin
+              </h1>
+              <h1 style={{ fontSize: 56, fontWeight: 900, background: 'linear-gradient(90deg, #8B5CF6, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.1, letterSpacing: '-2px' }}>
+                spoilers
+              </h1>
+            </div>
+
+            <p style={{ fontSize: 16, color: '#94A3B8', marginBottom: 44, lineHeight: 1.6, maxWidth: 360 }}>
+              La forma más fácil de coordinar regalos sin arruinar la sorpresa.
+            </p>
+
+            {/* Features */}
+            {[
+              { icon: '🎉', bg: '#2d1b69', title: 'Listas de regalos', desc: 'Crea y comparte listas para cualquier ocasión.' },
+              { icon: '🔒', bg: '#3d1a00', title: 'Sin spoilers', desc: 'El festejado nunca sabe quién regala qué.' },
+              { icon: '👥', bg: '#0d2d1a', title: 'En equipo', desc: 'Coordina fácilmente con familia y amigos.' },
+            ].map((f, i) => (
+              <div key={i} className="feature-card">
+                <div className="feature-icon" style={{ backgroundColor: f.bg }}>
+                  <span>{f.icon}</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#F8FAFC', marginBottom: 4 }}>{f.title}</div>
+                  <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>{f.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Columna derecha — glassmorphism */}
-          <div style={{ width: 560, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px', position: 'relative', zIndex: 1 }}>
-            <div style={{
-              width: '100%', maxWidth: 460, padding: '48px 44px',
-              backgroundColor: 'rgba(255,255,255,0.04)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              borderRadius: 28,
-              boxShadow: '0 30px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.08)',
-            }}>
+          {/* Columna derecha */}
+          <div style={{ width: 560, backgroundColor: '#0f0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 56px' }}>
+            <div style={{ width: '100%', maxWidth: 420 }}>
 
               {/* Selector idioma */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 36 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 40 }}>
                 {[['es', '🇲🇽 ES'], ['en', '🇺🇸 EN']].map(([lang, label]) => (
                   <button key={lang} onClick={() => cambiarIdioma(lang as any)} style={{
-                    padding: '7px 16px', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    padding: '6px 14px', borderRadius: 20, cursor: 'pointer', fontSize: 13, fontWeight: 600,
                     border: idioma === lang ? '1px solid #8B5CF6' : '1px solid rgba(255,255,255,0.1)',
                     backgroundColor: idioma === lang ? 'rgba(139,92,246,0.15)' : 'transparent',
-                    color: idioma === lang ? '#8B5CF6' : '#6B7280', transition: 'all 0.2s',
+                    color: idioma === lang ? '#8B5CF6' : '#6B7280',
                   }}>{label}</button>
                 ))}
               </div>
 
-              <h2 style={{ fontSize: 30, fontWeight: 800, color: '#F8FAFC', marginBottom: 8, letterSpacing: '-0.5px' }}>Bienvenido de nuevo</h2>
+              <h2 style={{ fontSize: 32, fontWeight: 800, color: '#F8FAFC', marginBottom: 8, letterSpacing: '-0.5px' }}>Bienvenido de nuevo</h2>
               <p style={{ fontSize: 15, color: '#6B7280', marginBottom: 36 }}>Inicia sesión para continuar</p>
 
               {/* Email */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.correo}</label>
-                <input className="input-field" type="email" placeholder="ejemplo@correo.com" value={email}
-                  onChange={(e: any) => setEmail(e.target.value)}
-                  style={{ width: '100%', padding: '15px 18px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 15, color: '#F8FAFC' }} />
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748B', marginBottom: 8, letterSpacing: '1px' }}>CORREO ELECTRÓNICO</label>
+              <div className="input-wrap" style={{ marginBottom: 16 }}>
+                <span style={{ fontSize: 16 }}>✉️</span>
+                <input className="input-web" type="email" placeholder="ejemplo@correo.com" value={email} onChange={(e: any) => setEmail(e.target.value)} />
               </div>
 
               {/* Password */}
-              <div style={{ marginBottom: 32 }}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.contrasena}</label>
-                <input className="input-field" type="password" placeholder="••••••••" value={password}
-                  onChange={(e: any) => setPassword(e.target.value)}
-                  style={{ width: '100%', padding: '15px 18px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 15, color: '#F8FAFC' }} />
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#64748B', marginBottom: 8, letterSpacing: '1px' }}>CONTRASEÑA</label>
+              <div className="input-wrap" style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 16 }}>🔑</span>
+                <input className="input-web" type="password" placeholder="••••••••" value={password} onChange={(e: any) => setPassword(e.target.value)} />
               </div>
 
-              {/* Botón entrar */}
-              <button className="btn-entrar" onClick={handleLogin} style={{
-                width: '100%', padding: '17px', background: 'linear-gradient(90deg, #8B5CF6, #EC4899, #F59E0B)',
-                border: 'none', borderRadius: 14, color: '#fff', fontSize: 17, fontWeight: 700,
-                cursor: 'pointer', marginBottom: 24, boxShadow: '0 6px 20px rgba(139,92,246,0.35)',
-              }}>{t.entrar}</button>
-
-              <div style={{ textAlign: 'center' as any, marginBottom: 16 }}>
-                <span style={{ fontSize: 13, color: '#4B5563' }}>{idioma === 'es' ? '¿nuevo en Giftu?' : 'new to Giftu?'}</span>
+              <div style={{ textAlign: 'right' as any, marginBottom: 28 }}>
+                <a className="link-purple" style={{ fontSize: 13 }}>¿Olvidaste tu contraseña?</a>
               </div>
 
-              <button className="btn-registro" onClick={() => router.push('/(tabs)/registro')} style={{
-                width: '100%', padding: '15px', backgroundColor: 'transparent',
-                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14,
-                color: '#94A3B8', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-              }}>{t.noTieneCuenta}</button>
+              <button className="btn-entrar" onClick={handleLogin}>{t.entrar}</button>
+
+              {/* Separador */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                <div className="sep-line" />
+                <span style={{ fontSize: 13, color: '#4B5563', whiteSpace: 'nowrap' as any }}>o continúa con</span>
+                <div className="sep-line" />
+              </div>
+
+              {/* Google */}
+              <button className="btn-google">G</button>
+
+              {/* Registro */}
+              <p style={{ textAlign: 'center' as any, marginTop: 32, fontSize: 14, color: '#64748B' }}>
+                ¿No tienes cuenta?{' '}
+                <a className="link-purple" onClick={() => router.push('/(tabs)/registro')} style={{ fontSize: 14 }}>Regístrate</a>
+              </p>
 
             </div>
           </div>
@@ -177,7 +173,7 @@ export default function Login() {
     );
   }
 
-  // Versión móvil (Android/iOS) — sin cambios
+  // Versión móvil
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
