@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useIdioma } from '../../app/IdiomaContext';
@@ -39,6 +39,27 @@ export default function Login() {
     }
   };
 
+  const handleOlvideContrasena = async () => {
+    if (!email) {
+      Alert.alert(
+        t.error,
+        idioma === 'es' ? 'Ingresa tu correo primero' : 'Enter your email first'
+      );
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert(
+        '✅',
+        idioma === 'es'
+          ? `Enviamos un link a ${email} para restablecer tu contraseña`
+          : `We sent a reset link to ${email}`
+      );
+    } catch (error) {
+      Alert.alert(t.error, idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
+    }
+  };
+
   if (cargando) {
     return (
       <View style={styles.cargando}>
@@ -56,36 +77,37 @@ export default function Login() {
           html, body { height: 100%; background: #0a0818; }
 
           .input-outer {
-            background: rgba(30,25,50,0.9);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(22,27,46,0.95);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
-            padding: 10px 14px;
+            padding: 4px 14px;
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 16px;
+            transition: border-color 0.2s;
           }
           .input-outer:focus-within {
             border-color: rgba(139,92,246,0.6);
+            box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
           }
           .input-inner {
             flex: 1;
-            background: rgba(255,255,255,0.92);
+            background: transparent;
             border: none;
-            border-radius: 8px;
-            padding: 12px 14px;
+            padding: 14px 4px;
             font-size: 15px;
-            color: #111;
+            color: #F8FAFC;
             outline: none;
             font-family: inherit;
             width: 100%;
           }
-          .input-inner::placeholder { color: #aaa; }
+          .input-inner::placeholder { color: #4B5563; }
 
           .btn-entrar {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(90deg, #c84bff, #ff6b35);
+            background: linear-gradient(90deg, #8B5CF6, #A855F7);
             border: none;
             border-radius: 12px;
             color: #fff;
@@ -99,22 +121,24 @@ export default function Login() {
           .btn-entrar:hover { opacity: 0.88; transform: translateY(-1px); }
 
           .btn-google {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            background: #fff;
-            border: none;
+            width: 100%;
+            padding: 13px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            font-weight: 800;
-            color: #4285F4;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #F8FAFC;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s;
             margin: 0 auto;
           }
-          .btn-google:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+          .btn-google:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
 
           .feature-card {
             display: flex;
@@ -122,15 +146,15 @@ export default function Login() {
             gap: 14px;
             padding: 16px 18px;
             border-radius: 14px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
             margin-bottom: 12px;
             max-width: 400px;
             transition: background 0.2s;
           }
-          .feature-card:hover { background: rgba(139,92,246,0.08); }
+          .feature-card:hover { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.2); }
 
-          .sep-line { flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+          .sep-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
 
           .link-purple {
             color: #a855f7;
@@ -139,6 +163,18 @@ export default function Login() {
             text-decoration: none;
           }
           .link-purple:hover { text-decoration: underline; }
+
+          .link-forgot {
+            color: rgba(168,85,247,0.8);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            font-family: inherit;
+            background: none;
+            border: none;
+          }
+          .link-forgot:hover { color: #a855f7; text-decoration: underline; }
 
           .lang-btn {
             padding: 5px 12px;
@@ -185,40 +221,43 @@ export default function Login() {
             position: 'relative',
             overflow: 'hidden',
           }}>
-            {/* Glow morado fondo */}
             <div style={{
               position: 'absolute', width: 400, height: 400, borderRadius: '50%',
               background: 'radial-gradient(circle, rgba(120,40,220,0.25) 0%, transparent 70%)',
               top: -100, left: -80, pointerEvents: 'none',
             }} />
+            <div style={{
+              position: 'absolute', width: 300, height: 300, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%)',
+              bottom: 50, right: -50, pointerEvents: 'none',
+            }} />
 
-            {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
-              <span style={{ fontSize: 42 }}>🎁</span>
-              <span style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Giftu</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
+              <span style={{ fontSize: 44 }}>🎁</span>
+              <span style={{ fontSize: 30, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Giftu</span>
             </div>
 
-            {/* Headline */}
-            <h1 style={{ fontSize: 52, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 0 0' }}>
-              Regala sin
+            <h1 style={{ fontSize: 54, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 0 0' }}>
+              {idioma === 'es' ? 'Regala sin' : 'Gift without'}
             </h1>
             <h1 style={{
-              fontSize: 52, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 20px 0',
-              background: 'linear-gradient(90deg, #c84bff, #ff6b35)',
+              fontSize: 54, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 24px 0',
+              background: 'linear-gradient(90deg, #8B5CF6, #F59E0B)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>
-              spoilers
+              {idioma === 'es' ? 'spoilers' : 'spoilers'}
             </h1>
 
-            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.5)', marginBottom: 44, lineHeight: 1.65, maxWidth: 320 }}>
-              La forma más fácil de coordinar regalos sin arruinar la sorpresa.
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', marginBottom: 48, lineHeight: 1.7, maxWidth: 320 }}>
+              {idioma === 'es'
+                ? 'La forma más fácil de coordinar regalos sin arruinar la sorpresa.'
+                : 'The easiest way to coordinate gifts without ruining the surprise.'}
             </p>
 
-            {/* Features */}
             {[
-              { icon: '🎉', bg: 'rgba(139,92,246,0.2)', title: 'Listas de regalos', desc: 'Crea y comparte listas para cualquier ocasión.' },
-              { icon: '🔒', bg: 'rgba(200,80,20,0.2)', title: 'Sin spoilers', desc: 'El festejado nunca sabe quién regala qué.' },
-              { icon: '👥', bg: 'rgba(30,160,100,0.2)', title: 'En equipo', desc: 'Coordina fácilmente con familia y amigos.' },
+              { icon: '🎉', bg: 'rgba(139,92,246,0.2)', title: idioma === 'es' ? 'Listas de regalos' : 'Gift lists', desc: idioma === 'es' ? 'Crea y comparte listas para cualquier ocasión.' : 'Create and share lists for any occasion.' },
+              { icon: '🔒', bg: 'rgba(245,158,11,0.15)', title: idioma === 'es' ? 'Sin spoilers' : 'No spoilers', desc: idioma === 'es' ? 'El festejado nunca sabe quién regala qué.' : 'The guest of honor never knows who gives what.' },
+              { icon: '👥', bg: 'rgba(16,185,129,0.15)', title: idioma === 'es' ? 'En equipo' : 'Team up', desc: idioma === 'es' ? 'Coordina fácilmente con familia y amigos.' : 'Easily coordinate with family and friends.' },
             ].map((f, i) => (
               <div key={i} className="feature-card">
                 <div style={{
@@ -228,8 +267,8 @@ export default function Login() {
                   {f.icon}
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 5 }}>{f.title}</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', lineHeight: 1.5 }}>{f.desc}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{f.title}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{f.desc}</div>
                 </div>
               </div>
             ))}
@@ -245,33 +284,30 @@ export default function Login() {
             padding: '56px 64px',
             position: 'relative',
           }}>
-            {/* Glow naranja fondo */}
             <div style={{
               position: 'absolute', width: 300, height: 300, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(220,80,20,0.15) 0%, transparent 70%)',
-              bottom: -60, left: '20%', pointerEvents: 'none',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)',
+              top: -60, right: '10%', pointerEvents: 'none',
             }} />
 
             <div style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
 
-              {/* Selector idioma */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 40 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 48 }}>
                 {[['es', 'MX ES'], ['en', 'US EN']].map(([lang, label]) => (
                   <button key={lang} className={idioma === lang ? 'lang-btn lang-active' : 'lang-btn lang-idle'}
                     onClick={() => cambiarIdioma(lang as any)}>{label}</button>
                 ))}
               </div>
 
-              <h2 style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.5px' }}>
-                Bienvenido de nuevo
+              <h2 style={{ fontSize: 34, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.5px' }}>
+                {idioma === 'es' ? 'Bienvenido de nuevo' : 'Welcome back'}
               </h2>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 36 }}>
-                Inicia sesión para continuar
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)', marginBottom: 40 }}>
+                {idioma === 'es' ? 'Inicia sesión para continuar' : 'Sign in to continue'}
               </p>
 
-              {/* Email */}
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: 8, textTransform: 'uppercase' as any }}>
-                Correo electrónico
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', marginBottom: 8, textTransform: 'uppercase' as any }}>
+                {idioma === 'es' ? 'Correo electrónico' : 'Email address'}
               </label>
               <div className="input-outer">
                 <span style={{ fontSize: 16, opacity: 0.4, flexShrink: 0 }}>✉️</span>
@@ -280,9 +316,8 @@ export default function Login() {
                   onKeyDown={(e: any) => e.key === 'Enter' && handleLogin()} />
               </div>
 
-              {/* Contraseña */}
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', marginBottom: 8, textTransform: 'uppercase' as any }}>
-                Contraseña
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', marginBottom: 8, textTransform: 'uppercase' as any }}>
+                {idioma === 'es' ? 'Contraseña' : 'Password'}
               </label>
               <div className="input-outer">
                 <span style={{ fontSize: 16, opacity: 0.4, flexShrink: 0 }}>🔑</span>
@@ -294,31 +329,33 @@ export default function Login() {
                 </button>
               </div>
 
-              {/* Olvidaste contraseña */}
               <div style={{ textAlign: 'right' as any, marginBottom: 28 }}>
-                <a className="link-purple" style={{ fontSize: 13 }}>¿Olvidaste tu contraseña?</a>
+                <button className="link-forgot" onClick={handleOlvideContrasena}>
+                  {idioma === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}
+                </button>
               </div>
 
-              {/* Entrar */}
-              <button className="btn-entrar" onClick={handleLogin}>{t.entrar}</button>
+              <button className="btn-entrar" onClick={handleLogin}>
+                {idioma === 'es' ? 'Entrar' : 'Sign in'}
+              </button>
 
-              {/* Separador */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
                 <div className="sep-line" />
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap' as any }}>o continúa con</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap' as any }}>
+                  {idioma === 'es' ? 'o continúa con' : 'or continue with'}
+                </span>
                 <div className="sep-line" />
               </div>
 
-              {/* Google */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
-                <button className="btn-google">G</button>
-              </div>
+              <button className="btn-google">
+                <span style={{ fontSize: 18, fontWeight: 800, color: '#4285F4', fontFamily: 'Arial' }}>G</span>
+                <span>{idioma === 'es' ? 'Continuar con Google' : 'Continue with Google'}</span>
+              </button>
 
-              {/* Registro */}
-              <p style={{ textAlign: 'center' as any, fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
-                ¿No tienes cuenta?{' '}
+              <p style={{ textAlign: 'center' as any, fontSize: 14, color: 'rgba(255,255,255,0.35)', marginTop: 32 }}>
+                {idioma === 'es' ? '¿No tienes cuenta? ' : "Don't have an account? "}
                 <a className="link-purple" onClick={() => router.push('/(tabs)/registro')} style={{ fontSize: 14 }}>
-                  Regístrate
+                  {idioma === 'es' ? 'Regístrate' : 'Sign up'}
                 </a>
               </p>
             </div>
@@ -328,7 +365,6 @@ export default function Login() {
     );
   }
 
-  // Versión móvil
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
@@ -356,8 +392,13 @@ export default function Login() {
           <Text style={styles.inputLabel}>{t.contrasena}</Text>
           <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#4B5563" value={password} onChangeText={setPassword} secureTextEntry />
         </View>
+        <TouchableOpacity onPress={handleOlvideContrasena} style={{ alignSelf: 'flex-end', marginBottom: 16 }}>
+          <Text style={{ color: '#8B5CF6', fontSize: 13 }}>
+            {idioma === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.boton} onPress={handleLogin}>
-          <LinearGradient colors={['#8B5CF6', '#EC4899', '#F59E0B']} style={styles.botonGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+          <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.botonGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             <Text style={styles.botonTexto}>{t.entrar}</Text>
           </LinearGradient>
         </TouchableOpacity>
