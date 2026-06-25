@@ -1,8 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
-import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import ConfettiCannon from 'react-native-confetti-cannon';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useIdioma } from '../../app/IdiomaContext';
 import { auth, db } from '../../firebaseConfig';
 
@@ -13,8 +12,6 @@ export default function ParticipanteEvento() {
   const [regalos, setRegalos] = useState([]);
   const [misApartados, setMisApartados] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [mostrarConfetti, setMostrarConfetti] = useState(false);
-  const confettiRef = useRef<any>(null);
   const usuario = auth.currentUser;
 
   useEffect(() => {
@@ -28,11 +25,7 @@ export default function ParticipanteEvento() {
   }, [id]);
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'apartados_privados'),
-      where('usuarioId', '==', usuario?.uid),
-      where('eventoId', '==', id)
-    );
+    const q = query(collection(db, 'apartados_privados'), where('usuarioId', '==', usuario?.uid), where('eventoId', '==', id));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const lista = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMisApartados(lista);
@@ -40,124 +33,161 @@ export default function ParticipanteEvento() {
     return () => unsubscribe();
   }, [id]);
 
+  const mostrarAlerta = (titulo: string, mensaje: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${titulo}\n\n${mensaje}`);
+    } else {
+      Alert.alert(titulo, mensaje);
+    }
+  };
+
   const handleApartar = async (regalo: any) => {
     if (regalo.estado === 'apartado') {
-      Alert.alert(t.error, t.noDisponible);
+      mostrarAlerta(t.error, t.noDisponible);
       return;
     }
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm(`${t.quieresApartar} "${regalo.nombre}"?`)
+      : await new Promise(resolve => Alert.alert(t.apartarRegalo, `${t.quieresApartar} "${regalo.nombre}"?`, [{ text: t.cancelar, style: 'cancel', onPress: () => resolve(false) }, { text: t.siApartar, onPress: () => resolve(true) }]));
 
-    Alert.alert(
-      t.apartarRegalo,
-      `${t.quieresApartar} "${regalo.nombre}"?`,
-      [
-        { text: t.cancelar, style: 'cancel' },
-        {
-          text: t.siApartar,
-          onPress: async () => {
-            try {
-              await updateDoc(doc(db, 'eventos', id as string, 'regalos', regalo.id), {
-                estado: 'apartado'
-              });
-              await addDoc(collection(db, 'apartados_privados'), {
-                usuarioId: usuario?.uid,
-                usuarioEmail: usuario?.email,
-                eventoId: id,
-                regaloId: regalo.id,
-                regaloNombre: regalo.nombre,
-                fechaApartado: new Date(),
-                cancelado: false,
-              });
-              setMostrarConfetti(true);
-              setTimeout(() => setMostrarConfetti(false), 3000);
-              Alert.alert('🎉', t.apartadoExito);
-            } catch (error) {
-              Alert.alert(t.error, t.errorApartar);
-            }
-          }
-        }
-      ]
-    );
+    if (!confirmar) return;
+    try {
+      await updateDoc(doc(db, 'eventos', id as string, 'regalos', regalo.id), { estado: 'apartado' });
+      await addDoc(collection(db, 'apartados_privados'), {
+        usuarioId: usuario?.uid, usuarioEmail: usuario?.email,
+        eventoId: id, regaloId: regalo.id, regaloNombre: regalo.nombre,
+        fechaApartado: new Date(), cancelado: false,
+      });
+      mostrarAlerta('🎉', t.apartadoExito);
+    } catch (error) {
+      mostrarAlerta(t.error, t.errorApartar);
+    }
   };
 
   const handleCancelar = async (apartado: any) => {
-    Alert.alert(
-      t.cancelarApartadoPregunta,
-      `${t.quieresLiberar} "${apartado.regaloNombre}"?`,
-      [
-        { text: t.cancelar, style: 'cancel' },
-        {
-          text: t.siCancelar,
-          onPress: async () => {
-            try {
-              await updateDoc(doc(db, 'eventos', id as string, 'regalos', apartado.regaloId), {
-                estado: 'disponible'
-              });
-              await deleteDoc(doc(db, 'apartados_privados', apartado.id));
-              Alert.alert(t.listo, t.regaloCancelado);
-            } catch (error) {
-              Alert.alert(t.error, t.errorCancelar);
-            }
-          }
-        }
-      ]
-    );
+    const confirmar = Platform.OS === 'web'
+      ? window.confirm(`${t.quieresLiberar} "${apartado.regaloNombre}"?`)
+      : await new Promise(resolve => Alert.alert(t.cancelarApartadoPregunta, `${t.quieresLiberar} "${apartado.regaloNombre}"?`, [{ text: t.cancelar, style: 'cancel', onPress: () => resolve(false) }, { text: t.siCancelar, onPress: () => resolve(true) }]));
+
+    if (!confirmar) return;
+    try {
+      await updateDoc(doc(db, 'eventos', id as string, 'regalos', apartado.regaloId), { estado: 'disponible' });
+      await deleteDoc(doc(db, 'apartados_privados', apartado.id));
+      mostrarAlerta(t.listo, t.regaloCancelado);
+    } catch (error) {
+      mostrarAlerta(t.error, t.errorCancelar);
+    }
   };
 
   const misApartadosIds = misApartados.map((a: any) => a.regaloId);
   const totalRegalos = regalos.length;
   const regalosDisponibles = regalos.filter((r: any) => r.estado === 'disponible').length;
 
+  if (Platform.OS === 'web') {
+    return (
+      <>
+        <style>{`
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body { background: #0a0818; }
+          .regalo-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px; margin-bottom: 12px; transition: all 0.2s; cursor: pointer; }
+          .regalo-card:hover { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.06); transform: translateY(-1px); }
+          .regalo-card-yo { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); }
+          .regalo-card-no { opacity: 0.5; cursor: not-allowed; }
+          .regalo-card-no:hover { transform: none; border-color: rgba(255,255,255,0.07); background: rgba(22,27,46,0.8); }
+          .btn-cancelar-apartado { padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); color: #EF4444; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+          .btn-cancelar-apartado:hover { background: rgba(239,68,68,0.2); }
+          .btn-regresar { background: rgba(22,27,46,0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 8px 16px; color: #8B5CF6; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+          .btn-regresar:hover { background: rgba(139,92,246,0.1); }
+        `}</style>
+
+        {/* Navbar */}
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 24 }}>🎁</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Giftu</span>
+          </div>
+          <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
+        </div>
+
+        <div style={{ backgroundColor: '#0a0818', minHeight: '100vh', fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '32px 24px', maxWidth: 900, margin: '0 auto' }}>
+
+          {/* Header */}
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{nombre}</h1>
+          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 32 }}>
+            🎁 {regalosDisponibles} {idioma === 'es' ? 'regalos disponibles de' : 'gifts available of'} {totalRegalos}
+          </p>
+
+          {/* Mis apartados */}
+          {misApartados.length > 0 && (
+            <div style={{ backgroundColor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 16, padding: 20, marginBottom: 28 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#10B981', marginBottom: 16 }}>{t.misRegalosApartados}</h3>
+              {misApartados.map((apartado: any) => (
+                <div key={apartado.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(22,27,46,0.8)', borderRadius: 12, padding: '12px 16px', marginBottom: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#F8FAFC' }}>{apartado.regaloNombre}</span>
+                  <button className="btn-cancelar-apartado" onClick={() => handleCancelar(apartado)}>{t.cancelarApartado}</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lista de regalos */}
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.listaRegalos}</h2>
+
+          {cargando ? (
+            <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
+          ) : (
+            regalos.map((regalo: any) => {
+              const yoAparte = misApartadosIds.includes(regalo.id);
+              const disponible = regalo.estado !== 'apartado';
+              return (
+                <div
+                  key={regalo.id}
+                  className={`regalo-card ${yoAparte ? 'regalo-card-yo' : ''} ${!disponible && !yoAparte ? 'regalo-card-no' : ''}`}
+                  onClick={() => disponible && !yoAparte && handleApartar(regalo)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, color: !disponible && !yoAparte ? '#6B7280' : '#fff', flex: 1 }}>{regalo.nombre}</span>
+                    {yoAparte && <span style={{ fontSize: 18, color: '#10B981' }}>✓</span>}
+                  </div>
+                  {regalo.precio && <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>💰 ${regalo.precio}</div>}
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20, backgroundColor: yoAparte ? 'rgba(16,185,129,0.1)' : disponible ? 'rgba(139,92,246,0.1)' : 'rgba(107,114,128,0.1)', color: yoAparte ? '#10B981' : disponible ? '#8B5CF6' : '#6B7280', border: `1px solid ${yoAparte ? 'rgba(16,185,129,0.3)' : disponible ? 'rgba(139,92,246,0.3)' : 'rgba(107,114,128,0.3)'}` }}>
+                    {yoAparte ? `✓ ${t.tuLoApartaste}` : disponible ? `✅ ${t.disponibleApartar}` : `🔒 ${t.noDisponible}`}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
-
-      {mostrarConfetti && (
-        <ConfettiCannon
-          count={150}
-          origin={{ x: 200, y: 0 }}
-          autoStart={true}
-          fadeOut={true}
-          colors={['#8B5CF6', '#F59E0B', '#EC4899', '#10B981', '#FBBF24']}
-        />
-      )}
-
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.replace('/(tabs)/dashboard')}
-            style={styles.botonRegresar}
-          >
+          <TouchableOpacity onPress={() => router.replace('/(tabs)/dashboard')} style={styles.botonRegresar}>
             <Text style={styles.botonRegresarTexto}>← {t.regresar}</Text>
           </TouchableOpacity>
           <Text style={styles.titulo}>{nombre}</Text>
-          <Text style={styles.subtitulo}>
-            🎁 {regalosDisponibles} {idioma === 'es' ? 'regalos disponibles de' : 'gifts available of'} {totalRegalos}
-          </Text>
+          <Text style={styles.subtitulo}>🎁 {regalosDisponibles} {idioma === 'es' ? 'regalos disponibles de' : 'gifts available of'} {totalRegalos}</Text>
         </View>
-
         <View style={styles.contenido}>
-
-          {/* Mis apartados */}
           {misApartados.length > 0 && (
             <View style={styles.misApartadosBox}>
               <Text style={styles.misApartadosTitulo}>{t.misRegalosApartados}</Text>
               {misApartados.map((apartado: any) => (
                 <View key={apartado.id} style={styles.tarjetaApartada}>
                   <Text style={styles.tarjetaApartadaNombre}>{apartado.regaloNombre}</Text>
-                  <TouchableOpacity
-                    style={styles.botonCancelarApartado}
-                    onPress={() => handleCancelar(apartado)}
-                  >
+                  <TouchableOpacity style={styles.botonCancelarApartado} onPress={() => handleCancelar(apartado)}>
                     <Text style={styles.botonCancelarTexto}>{t.cancelarApartado}</Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           )}
-
-          {/* Lista de regalos */}
           <Text style={styles.seccionTitulo}>{t.listaRegalos}</Text>
-
           {cargando ? (
             <ActivityIndicator size="large" color="#8B5CF6" />
           ) : (
@@ -165,36 +195,14 @@ export default function ParticipanteEvento() {
               const yoAparte = misApartadosIds.includes(regalo.id);
               const disponible = regalo.estado !== 'apartado';
               return (
-                <TouchableOpacity
-                  key={regalo.id}
-                  style={[
-                    styles.tarjeta,
-                    yoAparte && styles.tarjetaYo,
-                    !disponible && !yoAparte && styles.tarjetaNoDisponible,
-                  ]}
-                  onPress={() => disponible && !yoAparte && handleApartar(regalo)}
-                  disabled={!disponible && !yoAparte}
-                  activeOpacity={disponible ? 0.7 : 1}
-                >
+                <TouchableOpacity key={regalo.id} style={[styles.tarjeta, yoAparte && styles.tarjetaYo, !disponible && !yoAparte && styles.tarjetaNoDisponible]} onPress={() => disponible && !yoAparte && handleApartar(regalo)} disabled={!disponible && !yoAparte} activeOpacity={disponible ? 0.7 : 1}>
                   <View style={styles.tarjetaHeader}>
-                    <Text style={[styles.tarjetaNombre, !disponible && !yoAparte && styles.tarjetaNombreMuted]}>
-                      {regalo.nombre}
-                    </Text>
+                    <Text style={[styles.tarjetaNombre, !disponible && !yoAparte && styles.tarjetaNombreMuted]}>{regalo.nombre}</Text>
                     {yoAparte && <Text style={styles.checkEmoji}>✓</Text>}
                   </View>
-
-                  {regalo.precio ? (
-                    <Text style={styles.tarjetaPrecio}>💰 ${regalo.precio}</Text>
-                  ) : null}
-
-                  <View style={[
-                    styles.estadoBadge,
-                    yoAparte ? styles.estadoYo : disponible ? styles.estadoDisponible : styles.estadoNoDisponible
-                  ]}>
-                    <Text style={[
-                      styles.estadoTexto,
-                      yoAparte ? styles.textoYo : disponible ? styles.textoDisponible : styles.textoNoDisponible
-                    ]}>
+                  {regalo.precio ? <Text style={styles.tarjetaPrecio}>💰 ${regalo.precio}</Text> : null}
+                  <View style={[styles.estadoBadge, yoAparte ? styles.estadoYo : disponible ? styles.estadoDisponible : styles.estadoNoDisponible]}>
+                    <Text style={[styles.estadoTexto, yoAparte ? styles.textoYo : disponible ? styles.textoDisponible : styles.textoNoDisponible]}>
                       {yoAparte ? `✓ ${t.tuLoApartaste}` : disponible ? `✅ ${t.disponibleApartar}` : `🔒 ${t.noDisponible}`}
                     </Text>
                   </View>
@@ -202,7 +210,6 @@ export default function ParticipanteEvento() {
               );
             })
           )}
-
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>

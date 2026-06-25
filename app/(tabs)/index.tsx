@@ -2,9 +2,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { GoogleAuthProvider, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useIdioma } from '../../app/IdiomaContext';
 import { auth } from '../../firebaseConfig';
+
+const { width } = Dimensions.get('window');
+const isTablet = width >= 768;
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -59,13 +62,13 @@ export default function Login() {
     try {
       await sendPasswordResetEmail(auth, email);
       if (Platform.OS === 'web') {
-        window.alert(idioma === 'es' ? `✅ Enviamos un link a ${email} para restablecer tu contraseña` : `✅ We sent a reset link to ${email}`);
+        window.alert(idioma === 'es' ? `✅ Enviamos un link a ${email}` : `✅ We sent a reset link to ${email}`);
       } else {
         Alert.alert('✅', idioma === 'es' ? `Enviamos un link a ${email}` : `We sent a reset link to ${email}`);
       }
     } catch (error) {
       if (Platform.OS === 'web') {
-        window.alert(idioma === 'es' ? 'No se pudo enviar el correo. Verifica que esté registrado.' : 'Could not send email. Make sure it is registered.');
+        window.alert(idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
       } else {
         Alert.alert(t.error, idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
       }
@@ -100,7 +103,6 @@ export default function Login() {
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
           html, body { height: 100%; background: #0a0818; }
-
           .input-outer {
             background: rgba(22,27,46,0.95);
             border: 1px solid rgba(255,255,255,0.08);
@@ -128,7 +130,6 @@ export default function Login() {
             width: 100%;
           }
           .input-inner::placeholder { color: #4B5563; }
-
           .btn-entrar {
             width: 100%;
             padding: 15px;
@@ -144,7 +145,6 @@ export default function Login() {
             margin-bottom: 20px;
           }
           .btn-entrar:hover { opacity: 0.88; transform: translateY(-1px); }
-
           .btn-google {
             width: 100%;
             padding: 13px;
@@ -160,11 +160,9 @@ export default function Login() {
             font-weight: 600;
             color: #F8FAFC;
             font-family: inherit;
-            transition: background 0.2s, border-color 0.2s;
-            margin: 0 auto;
+            transition: background 0.2s;
           }
-          .btn-google:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-
+          .btn-google:hover { background: rgba(255,255,255,0.08); }
           .feature-card {
             display: flex;
             align-items: flex-start;
@@ -174,102 +172,46 @@ export default function Login() {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.07);
             margin-bottom: 12px;
-            max-width: 400px;
             transition: background 0.2s;
           }
-          .feature-card:hover { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.2); }
-
+          .feature-card:hover { background: rgba(139,92,246,0.08); }
           .sep-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
-
-          .link-purple {
-            color: #a855f7;
-            cursor: pointer;
-            font-weight: 700;
-            text-decoration: none;
-          }
+          .link-purple { color: #a855f7; cursor: pointer; font-weight: 700; text-decoration: none; }
           .link-purple:hover { text-decoration: underline; }
-
           .link-forgot {
-            color: rgba(168,85,247,0.8);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            text-decoration: none;
-            font-family: inherit;
-            background: none;
-            border: none;
+            color: rgba(168,85,247,0.8); cursor: pointer; font-size: 13px;
+            font-weight: 500; font-family: inherit; background: none; border: none;
           }
           .link-forgot:hover { color: #a855f7; text-decoration: underline; }
-
-          .lang-btn {
-            padding: 5px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: inherit;
-            transition: all 0.15s;
-          }
-          .lang-active {
-            background: rgba(139,92,246,0.2);
-            border: 1px solid #8B5CF6;
-            color: #a855f7;
-          }
-          .lang-idle {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.12);
-            color: rgba(255,255,255,0.35);
-          }
-
-          .eye-btn {
-            background: none; border: none; cursor: pointer;
-            color: rgba(255,255,255,0.3); font-size: 16px;
-            padding: 0; line-height: 1; flex-shrink: 0;
-          }
+          .lang-btn { padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: all 0.15s; }
+          .lang-active { background: rgba(139,92,246,0.2); border: 1px solid #8B5CF6; color: #a855f7; }
+          .lang-idle { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); }
+          .eye-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); font-size: 16px; padding: 0; line-height: 1; flex-shrink: 0; }
           .eye-btn:hover { color: rgba(255,255,255,0.7); }
+          @media (max-width: 768px) {
+            .left-col { display: none !important; }
+            .right-col { width: 100% !important; padding: 40px 24px !important; }
+          }
         `}</style>
 
-        <div style={{
-          display: 'flex',
-          minHeight: '100vh',
-          backgroundColor: '#0a0818',
-          fontFamily: "'Segoe UI', system-ui, -apple-system, sans-serif",
-        }}>
-          {/* Columna izquierda */}
-          <div style={{
-            width: '45%',
-            background: 'linear-gradient(160deg, #1e0a3c 0%, #130820 60%, #0a0818 100%)',
-            padding: '56px 52px',
-            display: 'flex',
-            flexDirection: 'column' as any,
-            justifyContent: 'center',
-            position: 'relative',
-            overflow: 'hidden',
+        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+          {/* Columna izquierda - oculta en móvil */}
+          <div className="left-col" style={{
+            width: '45%', background: 'linear-gradient(160deg, #1e0a3c 0%, #130820 60%, #0a0818 100%)',
+            padding: '56px 52px', display: 'flex', flexDirection: 'column' as any,
+            justifyContent: 'center', position: 'relative', overflow: 'hidden',
           }}>
-            <div style={{
-              position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(120,40,220,0.25) 0%, transparent 70%)',
-              top: -100, left: -80, pointerEvents: 'none',
-            }} />
-            <div style={{
-              position: 'absolute', width: 300, height: 300, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%)',
-              bottom: 50, right: -50, pointerEvents: 'none',
-            }} />
+            <div style={{ position: 'absolute', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(120,40,220,0.25) 0%, transparent 70%)', top: -100, left: -80, pointerEvents: 'none' }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
               <span style={{ fontSize: 44 }}>🎁</span>
               <span style={{ fontSize: 30, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Giftu</span>
             </div>
 
-            <h1 style={{ fontSize: 54, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 0 0' }}>
+            <h1 style={{ fontSize: 54, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-2px', margin: '0' }}>
               {idioma === 'es' ? 'Regala sin' : 'Gift without'}
             </h1>
-            <h1 style={{
-              fontSize: 54, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 24px 0',
-              background: 'linear-gradient(90deg, #8B5CF6, #F59E0B)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>
+            <h1 style={{ fontSize: 54, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 24px 0', background: 'linear-gradient(90deg, #8B5CF6, #F59E0B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               spoilers
             </h1>
 
@@ -283,12 +225,7 @@ export default function Login() {
               { icon: '👥', bg: 'rgba(16,185,129,0.15)', title: idioma === 'es' ? 'En equipo' : 'Team up', desc: idioma === 'es' ? 'Coordina fácilmente con familia y amigos.' : 'Easily coordinate with family and friends.' },
             ].map((f, i) => (
               <div key={i} className="feature-card">
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                  background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-                }}>
-                  {f.icon}
-                </div>
+                <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{f.icon}</div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{f.title}</div>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', lineHeight: 1.5 }}>{f.desc}</div>
@@ -298,27 +235,12 @@ export default function Login() {
           </div>
 
           {/* Columna derecha */}
-          <div style={{
-            flex: 1,
-            background: '#0f0d1a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '56px 64px',
-            position: 'relative',
-          }}>
-            <div style={{
-              position: 'absolute', width: 300, height: 300, borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)',
-              top: -60, right: '10%', pointerEvents: 'none',
-            }} />
-
+          <div className="right-col" style={{ flex: 1, background: '#0f0d1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px 64px', position: 'relative' }}>
             <div style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginBottom: 48 }}>
                 {[['es', 'MX ES'], ['en', 'US EN']].map(([lang, label]) => (
-                  <button key={lang} className={idioma === lang ? 'lang-btn lang-active' : 'lang-btn lang-idle'}
-                    onClick={() => cambiarIdioma(lang as any)}>{label}</button>
+                  <button key={lang} className={idioma === lang ? 'lang-btn lang-active' : 'lang-btn lang-idle'} onClick={() => cambiarIdioma(lang as any)}>{label}</button>
                 ))}
               </div>
 
@@ -334,9 +256,7 @@ export default function Login() {
               </label>
               <div className="input-outer">
                 <span style={{ fontSize: 16, opacity: 0.4, flexShrink: 0 }}>✉️</span>
-                <input className="input-inner" type="email" placeholder="ejemplo@correo.com"
-                  value={email} onChange={(e: any) => setEmail(e.target.value)}
-                  onKeyDown={(e: any) => e.key === 'Enter' && handleLogin()} />
+                <input className="input-inner" type="email" placeholder="ejemplo@correo.com" value={email} onChange={(e: any) => setEmail(e.target.value)} onKeyDown={(e: any) => e.key === 'Enter' && handleLogin()} />
               </div>
 
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em', marginBottom: 8, textTransform: 'uppercase' as any }}>
@@ -344,12 +264,8 @@ export default function Login() {
               </label>
               <div className="input-outer">
                 <span style={{ fontSize: 16, opacity: 0.4, flexShrink: 0 }}>🔑</span>
-                <input className="input-inner" type={showPassword ? 'text' : 'password'} placeholder="••••••••"
-                  value={password} onChange={(e: any) => setPassword(e.target.value)}
-                  onKeyDown={(e: any) => e.key === 'Enter' && handleLogin()} />
-                <button className="eye-btn" onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
+                <input className="input-inner" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e: any) => setPassword(e.target.value)} onKeyDown={(e: any) => e.key === 'Enter' && handleLogin()} />
+                <button className="eye-btn" onClick={() => setShowPassword(!showPassword)}>{showPassword ? '🙈' : '👁️'}</button>
               </div>
 
               <div style={{ textAlign: 'right' as any, marginBottom: 28 }}>
@@ -358,15 +274,11 @@ export default function Login() {
                 </button>
               </div>
 
-              <button className="btn-entrar" onClick={handleLogin}>
-                {idioma === 'es' ? 'Entrar' : 'Sign in'}
-              </button>
+              <button className="btn-entrar" onClick={handleLogin}>{idioma === 'es' ? 'Entrar' : 'Sign in'}</button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
                 <div className="sep-line" />
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap' as any }}>
-                  {idioma === 'es' ? 'o continúa con' : 'or continue with'}
-                </span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap' as any }}>{idioma === 'es' ? 'o continúa con' : 'or continue with'}</span>
                 <div className="sep-line" />
               </div>
 
@@ -388,7 +300,6 @@ export default function Login() {
     );
   }
 
-  // Versión móvil
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
@@ -414,12 +325,10 @@ export default function Login() {
         </View>
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>{t.contrasena}</Text>
-          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#4B5563" value={password} onChangeText={setPassword} secureTextEntry />
+          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#4B5563" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
         </View>
         <TouchableOpacity onPress={handleOlvideContrasena} style={{ alignSelf: 'flex-end', marginBottom: 16 }}>
-          <Text style={{ color: '#8B5CF6', fontSize: 13 }}>
-            {idioma === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}
-          </Text>
+          <Text style={{ color: '#8B5CF6', fontSize: 13 }}>{idioma === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.boton} onPress={handleLogin}>
           <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.botonGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>

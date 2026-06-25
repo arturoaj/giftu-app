@@ -1,14 +1,16 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { reload, sendEmailVerification, signOut } from 'firebase/auth';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { useState } from 'react';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useIdioma } from '../../app/IdiomaContext';
-import { auth } from '../../firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
 
-export default function VerificarEmail() {
+export default function Unirse() {
+  const [codigo, setCodigo] = useState('');
+  const [cargando, setCargando] = useState(false);
   const router = useRouter();
-  const { idioma } = useIdioma();
-  const [enviando, setEnviando] = useState(false);
+  const { t, idioma } = useIdioma();
 
   const mostrarAlerta = (titulo: string, mensaje: string) => {
     if (Platform.OS === 'web') {
@@ -18,126 +20,171 @@ export default function VerificarEmail() {
     }
   };
 
-  const handleReenviar = async () => {
-    const usuario = auth.currentUser;
-    if (!usuario) return;
-    setEnviando(true);
-    try {
-      await sendEmailVerification(usuario);
-      mostrarAlerta('✅', idioma === 'es' ? `Correo enviado a ${usuario.email}` : `Email sent to ${usuario.email}`);
-    } catch (error) {
-      mostrarAlerta('Error', idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
-    } finally {
-      setEnviando(false);
+  const handleUnirse = async () => {
+    if (!codigo.trim()) {
+      mostrarAlerta(t.error, t.ingresaCodigoError);
+      return;
     }
-  };
-
-  const handleYaVerifique = async () => {
+    setCargando(true);
     try {
-      await reload(auth.currentUser!);
-      const usuarioActualizado = auth.currentUser;
-      if (usuarioActualizado?.emailVerified) {
-        router.replace('/(tabs)/dashboard');
-      } else {
-        mostrarAlerta(
-          idioma === 'es' ? 'Aún no verificado' : 'Not verified yet',
-          idioma === 'es' ? 'Revisa tu correo y haz clic en el link de verificación.' : 'Check your email and click the verification link.'
-        );
+      const q = query(collection(db, 'eventos'), where('codigo', '==', codigo.trim().toUpperCase()));
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        mostrarAlerta(t.error, t.codigoIncorrecto);
+        setCargando(false);
+        return;
       }
+      const eventoDoc = snapshot.docs[0];
+      const evento = { id: eventoDoc.id, ...eventoDoc.data() } as any;
+      const usuario = auth.currentUser;
+      const participacionQuery = query(collection(db, 'participaciones'), where('usuarioId', '==', usuario?.uid), where('eventoId', '==', evento.id));
+      const participacionSnapshot = await getDocs(participacionQuery);
+      if (participacionSnapshot.empty) {
+        await addDoc(collection(db, 'participaciones'), {
+          usuarioId: usuario?.uid, usuarioEmail: usuario?.email,
+          eventoId: evento.id, eventoNombre: evento.nombre,
+          rol: 'participante', unidoEn: new Date(),
+        });
+      }
+      router.replace({ pathname: '/(tabs)/participante-evento', params: { id: evento.id, nombre: evento.nombre, codigo: evento.codigo } });
     } catch (error) {
-      mostrarAlerta('Error', idioma === 'es' ? 'Intenta de nuevo' : 'Try again');
+      mostrarAlerta(t.error, t.errorUnirse);
+    } finally {
+      setCargando(false);
     }
   };
-
-  const handleSalir = async () => {
-    await signOut(auth);
-    router.replace('/(tabs)');
-  };
-
-  const usuario = auth.currentUser;
 
   if (Platform.OS === 'web') {
     return (
-      <div style={{
-        minHeight: '100vh', backgroundColor: '#0a0818', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', padding: '40px 20px',
-        fontFamily: "'Segoe UI', system-ui, sans-serif",
-      }}>
-        <div style={{ width: '100%', maxWidth: 440, textAlign: 'center' as any }}>
-          <div style={{ fontSize: 80, marginBottom: 24 }}>📧</div>
-          <h2 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 12 }}>
-            {idioma === 'es' ? 'Verifica tu correo' : 'Verify your email'}
-          </h2>
-          <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 8, lineHeight: 1.6 }}>
-            {idioma === 'es' ? 'Enviamos un link de verificación a:' : 'We sent a verification link to:'}
-          </p>
-          <p style={{ fontSize: 16, color: '#8B5CF6', fontWeight: 700, marginBottom: 40 }}>{usuario?.email}</p>
+      <>
+        <style>{`
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          html, body { height: 100%; background: #0a0818; }
+          .codigo-input {
+            width: 100%;
+            background: rgba(22,27,46,0.95);
+            border: 2px solid #8B5CF6;
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 36px;
+            color: #F59E0B;
+            outline: none;
+            font-family: monospace;
+            text-align: center;
+            letter-spacing: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+          }
+          .codigo-input:focus { border-color: #A855F7; box-shadow: 0 0 0 4px rgba(139,92,246,0.2); }
+          .codigo-input::placeholder { color: rgba(45,51,67,0.8); letter-spacing: 8px; font-size: 28px; }
+          .btn-unirse {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #F59E0B, #FBBF24);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.2s, transform 0.2s;
+            margin-bottom: 12px;
+          }
+          .btn-unirse:hover { opacity: 0.88; transform: translateY(-1px); }
+          .btn-unirse:disabled { opacity: 0.5; cursor: not-allowed; }
+          .btn-regresar {
+            background: rgba(22,27,46,0.95); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 8px 16px; color: #8B5CF6; font-size: 14px;
+            font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 32px; display: inline-block;
+          }
+          .btn-regresar:hover { background: rgba(139,92,246,0.1); }
+        `}</style>
 
-          <button onClick={handleYaVerifique} style={{
-            width: '100%', padding: '15px', background: 'linear-gradient(90deg, #8B5CF6, #A855F7)',
-            border: 'none', borderRadius: 12, color: '#fff', fontSize: 16, fontWeight: 700,
-            cursor: 'pointer', marginBottom: 16, fontFamily: 'inherit',
-          }}>
-            {idioma === 'es' ? '✅ Ya verifiqué mi correo' : '✅ I already verified my email'}
-          </button>
-
-          <button onClick={handleReenviar} disabled={enviando} style={{
-            width: '100%', padding: '14px', background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12,
-            color: '#94A3B8', fontSize: 15, fontWeight: 600, cursor: 'pointer',
-            marginBottom: 16, fontFamily: 'inherit',
-          }}>
-            {enviando ? (idioma === 'es' ? 'Enviando...' : 'Sending...') : (idioma === 'es' ? '📨 Reenviar correo' : '📨 Resend email')}
-          </button>
-
-          <button onClick={handleSalir} style={{
-            background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)',
-            fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
-          }}>
-            {idioma === 'es' ? 'Cerrar sesión' : 'Sign out'}
-          </button>
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+          <span style={{ fontSize: 24 }}>🎁</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginLeft: 10 }}>Giftu</span>
         </div>
-      </div>
+
+        <div style={{ minHeight: '100vh', backgroundColor: '#0a0818', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+          <div style={{ width: '100%', maxWidth: 480 }}>
+            <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
+
+            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.5px' }}>{t.unirseEvento}</h1>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 36 }}>{t.ingresaCodigo}</p>
+
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 12 }}>{t.codigoEvento}</label>
+            <input className="codigo-input" type="text" placeholder="XXXXXX" maxLength={6}
+              value={codigo} onChange={(e: any) => setCodigo(e.target.value.toUpperCase())}
+              onKeyDown={(e: any) => e.key === 'Enter' && handleUnirse()} />
+            <p style={{ fontSize: 12, color: '#6B7280', textAlign: 'center', marginBottom: 28 }}>
+              {idioma === 'es' ? '6 caracteres — letras y números' : '6 characters — letters and numbers'}
+            </p>
+
+            <button className="btn-unirse" onClick={handleUnirse} disabled={cargando}>
+              {cargando ? (idioma === 'es' ? 'Buscando...' : 'Searching...') : `🔑 ${t.unirseBtn}`}
+            </button>
+
+            <div style={{ backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px 20px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 20 }}>💡</span>
+              <p style={{ fontSize: 13, color: '#6B7280', lineHeight: 1.6 }}>
+                {idioma === 'es' ? 'El organizador del evento te compartió un código de 6 caracteres. Ingrésalo arriba para ver la lista de regalos.' : 'The event organizer shared a 6-character code with you. Enter it above to see the gift list.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.contenido}>
-        <Text style={styles.emoji}>📧</Text>
-        <Text style={styles.titulo}>{idioma === 'es' ? 'Verifica tu correo' : 'Verify your email'}</Text>
-        <Text style={styles.subtitulo}>
-          {idioma === 'es' ? 'Enviamos un link de verificación a:' : 'We sent a verification link to:'}
-        </Text>
-        <Text style={styles.email}>{usuario?.email}</Text>
-        <TouchableOpacity style={styles.botonPrimario} onPress={handleYaVerifique}>
-          <Text style={styles.botonPrimarioTexto}>
-            {idioma === 'es' ? '✅ Ya verifiqué mi correo' : '✅ I already verified my email'}
-          </Text>
+      <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)/dashboard')} style={styles.botonRegresar}>
+          <Text style={styles.botonRegresarTexto}>← {t.regresar}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.botonSecundario} onPress={handleReenviar} disabled={enviando}>
-          <Text style={styles.botonSecundarioTexto}>
-            {enviando ? (idioma === 'es' ? 'Enviando...' : 'Sending...') : (idioma === 'es' ? '📨 Reenviar correo' : '📨 Resend email')}
-          </Text>
+        <Text style={styles.titulo}>{t.unirseEvento}</Text>
+        <Text style={styles.subtitulo}>{t.ingresaCodigo}</Text>
+      </View>
+      <View style={styles.formulario}>
+        <View style={styles.codigoInputContainer}>
+          <Text style={styles.inputLabel}>{t.codigoEvento}</Text>
+          <TextInput style={styles.codigoInput} placeholder="XXXXXX" placeholderTextColor="#2D3343" value={codigo} onChangeText={setCodigo} autoCapitalize="characters" maxLength={6} autoFocus />
+          <Text style={styles.codigoHint}>{idioma === 'es' ? '6 caracteres — letras y números' : '6 characters — letters and numbers'}</Text>
+        </View>
+        <TouchableOpacity style={[styles.boton, cargando && styles.botonDesactivado]} onPress={handleUnirse} disabled={cargando}>
+          <LinearGradient colors={['#F59E0B', '#FBBF24']} style={styles.botonGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            {cargando ? <ActivityIndicator color="#fff" /> : <Text style={styles.botonTexto}>🔑 {t.unirseBtn}</Text>}
+          </LinearGradient>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSalir}>
-          <Text style={styles.salir}>{idioma === 'es' ? 'Cerrar sesión' : 'Sign out'}</Text>
-        </TouchableOpacity>
+        <View style={styles.infoBox}>
+          <Text style={styles.infoEmoji}>💡</Text>
+          <Text style={styles.infoTexto}>{idioma === 'es' ? 'El organizador del evento te compartió un código de 6 caracteres.' : 'The event organizer shared a 6-character code with you.'}</Text>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0D0D', justifyContent: 'center', alignItems: 'center' },
-  contenido: { padding: 32, alignItems: 'center', maxWidth: 360 },
-  emoji: { fontSize: 80, marginBottom: 24 },
-  titulo: { fontSize: 26, fontWeight: 'bold', color: '#F8FAFC', textAlign: 'center', marginBottom: 12 },
-  subtitulo: { fontSize: 15, color: '#6B7280', textAlign: 'center', marginBottom: 8 },
-  email: { fontSize: 16, color: '#8B5CF6', fontWeight: 'bold', textAlign: 'center', marginBottom: 40 },
-  botonPrimario: { width: '100%', backgroundColor: '#8B5CF6', padding: 18, borderRadius: 14, alignItems: 'center', marginBottom: 12 },
-  botonPrimarioTexto: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  botonSecundario: { width: '100%', backgroundColor: '#161B2E', padding: 18, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2D3343', marginBottom: 24 },
-  botonSecundarioTexto: { color: '#94A3B8', fontSize: 15, fontWeight: '600' },
-  salir: { fontSize: 14, color: 'rgba(255,255,255,0.3)' },
+  container: { flex: 1, backgroundColor: '#0D0D0D' },
+  header: { paddingTop: 60, paddingHorizontal: 24, paddingBottom: 24 },
+  botonRegresar: { marginBottom: 24, alignSelf: 'flex-start', backgroundColor: '#161B2E', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#2D3343' },
+  botonRegresarTexto: { fontSize: 14, color: '#8B5CF6', fontWeight: '600' },
+  titulo: { fontSize: 32, fontWeight: 'bold', color: '#F8FAFC', marginBottom: 8 },
+  subtitulo: { fontSize: 14, color: '#6B7280' },
+  formulario: { paddingHorizontal: 24 },
+  codigoInputContainer: { marginBottom: 24 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', marginBottom: 12 },
+  codigoInput: { backgroundColor: '#161B2E', borderWidth: 2, borderColor: '#8B5CF6', borderRadius: 16, padding: 20, fontSize: 32, color: '#F59E0B', textAlign: 'center', letterSpacing: 8, fontWeight: 'bold' },
+  codigoHint: { fontSize: 12, color: '#6B7280', textAlign: 'center', marginTop: 8 },
+  boton: { borderRadius: 14, overflow: 'hidden', marginBottom: 24 },
+  botonDesactivado: { opacity: 0.6 },
+  botonGradiente: { padding: 18, alignItems: 'center' },
+  botonTexto: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
+  infoBox: { flexDirection: 'row', backgroundColor: '#161B2E', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#2D3343', gap: 12, alignItems: 'flex-start' },
+  infoEmoji: { fontSize: 20 },
+  infoTexto: { fontSize: 13, color: '#6B7280', flex: 1, lineHeight: 20 },
 });
