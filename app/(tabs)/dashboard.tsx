@@ -39,122 +39,17 @@ export default function Dashboard() {
   }, [usuario]);
 
   const handleLogout = async () => {
-    if (Platform.OS === 'web') {if (Platform.OS === 'web') {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    
-    if (isMobile) {
-      // En móvil web mostrar igual que la app
-      return (
-        <View style={styles.container}>
-          <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <LinearGradient colors={['#161B2E', '#0D0D0D']} style={styles.header}>
-              <View style={styles.headerTop}>
-                <View>
-                  <Text style={styles.saludo}>{idioma === 'es' ? '¡Hola,' : 'Hello,'} <Text style={styles.saludoNombre}>{nombre} 👋</Text></Text>
-                  <Text style={styles.saludoSub}>{idioma === 'es' ? 'Bienvenido a Giftu' : 'Welcome to Giftu'}</Text>
-                </View>
-                <TouchableOpacity onPress={handleLogout} style={styles.botonSalirIcon}>
-                  <Text style={styles.botonSalirIconTexto}>⎋</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.statsContainer}>
-                <View style={styles.statBox}>
-                  <Text style={styles.statNumero}>{eventos.length}</Text>
-                  <Text style={styles.statLabel}>{idioma === 'es' ? 'Eventos' : 'Events'}</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statBox}>
-                  <Text style={styles.statNumero}>{participaciones.length}</Text>
-                  <Text style={styles.statLabel}>{idioma === 'es' ? 'Participo' : 'Joined'}</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statBox}>
-                  <Text style={styles.statNumero}>🎁</Text>
-                  <Text style={styles.statLabel}>Giftu</Text>
-                </View>
-              </View>
-            </LinearGradient>
-            <View style={styles.contenido}>
-              <View style={styles.accionesRow}>
-                <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/crear-evento')}>
-                  <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.accionGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                    <Text style={styles.accionEmoji}>✨</Text>
-                    <Text style={styles.accionTexto}>{idioma === 'es' ? 'Crear\nevento' : 'Create\nevent'}</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/unirse')}>
-                  <LinearGradient colors={['#F59E0B', '#FBBF24']} style={styles.accionGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                    <Text style={styles.accionEmoji}>🔑</Text>
-                    <Text style={styles.accionTexto}>{idioma === 'es' ? 'Unirse\ncon código' : 'Join\nwith code'}</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.seccionTitulo}>{t.misEventos}</Text>
-              {cargando ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} /> : eventos.length === 0 ? (
-                <View style={styles.vacio}>
-                  <Text style={styles.vacioEmoji}>🎉</Text>
-                  <Text style={styles.vacioTexto}>{t.sinEventos}</Text>
-                  <Text style={styles.vacioSubtexto}>{t.creaEvento}</Text>
-                </View>
-              ) : (
-                eventos.map((evento: any) => (
-                  <TouchableOpacity key={evento.id} style={styles.tarjeta} onPress={() => router.push({ pathname: '/(tabs)/evento-detalle', params: { id: evento.id, nombre: evento.nombre, codigo: evento.codigo } })}>
-                    <View style={styles.tarjetaHeader}>
-                      <Text style={styles.tarjetaNombre}>{evento.nombre}</Text>
-                      <Text style={styles.tarjetaFlecha}>→</Text>
-                    </View>
-                    {evento.fecha ? <Text style={styles.tarjetaFecha}>📅 {evento.fecha}</Text> : null}
-                    <View style={styles.codigoContainer}>
-                      <Text style={styles.codigoLabel}>{t.codigoParaCompartir}: </Text>
-                      <Text style={styles.codigo}>{evento.codigo}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              )}
-              <Text style={styles.seccionTitulo}>{t.eventosDondeParticipo}</Text>
-              {cargandoP ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} /> : participaciones.length === 0 ? (
-                <View style={styles.vacio}>
-                  <Text style={styles.vacioEmoji}>🔑</Text>
-                  <Text style={styles.vacioTexto}>{t.sinParticipar}</Text>
-                  <Text style={styles.vacioSubtexto}>{t.usaCodigo}</Text>
-                </View>
-              ) : (
-                participaciones.map((p: any) => (
-                  <TouchableOpacity key={p.id} style={styles.tarjetaDorada} onPress={() => router.push({ pathname: '/(tabs)/participante-evento', params: { id: p.eventoId, nombre: p.eventoNombre, codigo: '' } })}>
-                    <View style={styles.tarjetaHeader}>
-                      <Text style={styles.tarjetaNombre}>{p.eventoNombre}</Text>
-                      <Text style={styles.tarjetaFlecha}>→</Text>
-                    </View>
-                    <View style={styles.participanteBadge}>
-                      <Text style={styles.participanteTexto}>🎁 {t.participante}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              )}
-              <View style={{ height: 40 }} />
-            </View>
-          </ScrollView>
-        </View>
-      );
-    }
+    if (Platform.OS === 'web') {
       const confirmar = window.confirm(idioma === 'es' ? '¿Cerrar sesión?' : 'Sign out?');
       if (confirmar) {
-        try {
-          await signOut(auth);
-          router.replace('/(tabs)');
-        } catch (error) {
-          window.alert('No se pudo cerrar sesión');
-        }
+        try { await signOut(auth); router.replace('/(tabs)'); }
+        catch { window.alert('No se pudo cerrar sesión'); }
       }
     } else {
-      Alert.alert(
-        t.cerrarSesion, t.cerrarSesionPregunta,
-        [
-          { text: t.cancelar, style: 'cancel' },
-          { text: t.salir, onPress: async () => { try { await signOut(auth); router.replace('/(tabs)'); } catch (error) { Alert.alert(t.error, 'No se pudo cerrar sesión'); } } }
-        ]
-      );
+      Alert.alert(t.cerrarSesion, t.cerrarSesionPregunta, [
+        { text: t.cancelar, style: 'cancel' },
+        { text: t.salir, onPress: async () => { try { await signOut(auth); router.replace('/(tabs)'); } catch { Alert.alert(t.error, 'No se pudo cerrar sesión'); } } }
+      ]);
     }
   };
 
@@ -165,86 +60,34 @@ export default function Dashboard() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { height: 100%; background: #0a0818; }
-          .dash-card {
-            background: rgba(22,27,46,0.8);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 16px;
-            padding: 20px 24px;
-            margin-bottom: 12px;
-            transition: border-color 0.2s, background 0.2s;
-            cursor: pointer;
-          }
+          html, body { background: #0a0818; }
+          .dash-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; transition: border-color 0.2s, background 0.2s; cursor: pointer; }
           .dash-card:hover { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.06); }
           .dash-card-gold:hover { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.06); }
-          .btn-accion {
-            flex: 1;
-            padding: 20px;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            font-family: inherit;
-            transition: opacity 0.2s, transform 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-          }
+          .btn-accion { flex: 1; padding: 20px; border: none; border-radius: 16px; cursor: pointer; font-family: inherit; transition: opacity 0.2s, transform 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
           .btn-accion:hover { opacity: 0.88; transform: translateY(-2px); }
-          .nav-link {
-            color: rgba(255,255,255,0.4);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            background: none;
-            border: none;
-            font-family: inherit;
-          }
-          .nav-link:hover { color: #fff; background: rgba(255,255,255,0.06); }
-          .btn-logout {
-            padding: 8px 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: transparent;
-            color: rgba(255,255,255,0.5);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            transition: all 0.2s;
-          }
+          .btn-logout { padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
           .btn-logout:hover { border-color: #EF4444; color: #EF4444; }
+          .vacio-box { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 32px; text-align: center; margin-bottom: 32px; min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         `}</style>
 
-        <div style={{ minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif", overflowY: 'auto' as any }}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
           {/* Navbar */}
-          <div style={{
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            padding: '0 40px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            height: 64, backgroundColor: 'rgba(10,8,24,0.95)',
-            position: 'sticky', top: 0, zIndex: 100,
-            backdropFilter: 'blur(12px)',
-          }}>
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 28 }}>🎁</span>
-              <span style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-0.5px' }}>Giftu</span>
+              <span style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Giftu</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginRight: 8 }}>
                 {idioma === 'es' ? '¡Hola,' : 'Hello,'} <strong style={{ color: '#fff' }}>{nombre}</strong>
               </span>
-              <button className="btn-logout" onClick={handleLogout}>
-                {idioma === 'es' ? '⎋ Salir' : '⎋ Sign out'}
-              </button>
+              <button className="btn-logout" onClick={handleLogout}>{idioma === 'es' ? '⎋ Salir' : '⎋ Sign out'}</button>
             </div>
           </div>
 
-          {/* Contenido principal */}
+          {/* Contenido */}
           <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
 
             {/* Stats */}
@@ -254,46 +97,35 @@ export default function Dashboard() {
                 { num: participaciones.length, label: idioma === 'es' ? 'Participo en' : 'Joined', color: '#F59E0B' },
                 { num: '🎁', label: 'Giftu', color: '#EC4899' },
               ].map((s, i) => (
-                <div key={i} style={{
-                  backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 16, padding: '20px 24px', textAlign: 'center' as any,
-                }}>
+                <div key={i} style={{ backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 24px', textAlign: 'center' as any }}>
                   <div style={{ fontSize: 28, fontWeight: 800, color: s.color, marginBottom: 6 }}>{s.num}</div>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{s.label}</div>
                 </div>
               ))}
             </div>
 
-            {/* Botones de acción */}
+            {/* Botones acción */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
-              <button className="btn-accion" onClick={() => router.push('/(tabs)/crear-evento')}
-                style={{ background: 'linear-gradient(135deg, #8B5CF6, #A855F7)' }}>
+              <button className="btn-accion" onClick={() => router.push('/(tabs)/crear-evento')} style={{ background: 'linear-gradient(135deg, #8B5CF6, #A855F7)' }}>
                 <span style={{ fontSize: 28 }}>✨</span>
-                <span style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>
-                  {idioma === 'es' ? 'Crear evento' : 'Create event'}
-                </span>
+                <span style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>{idioma === 'es' ? 'Crear evento' : 'Create event'}</span>
               </button>
-              <button className="btn-accion" onClick={() => router.push('/(tabs)/unirse')}
-                style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}>
+              <button className="btn-accion" onClick={() => router.push('/(tabs)/unirse')} style={{ background: 'linear-gradient(135deg, #F59E0B, #FBBF24)' }}>
                 <span style={{ fontSize: 28 }}>🔑</span>
-                <span style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>
-                  {idioma === 'es' ? 'Unirse con código' : 'Join with code'}
-                </span>
+                <span style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>{idioma === 'es' ? 'Unirse con código' : 'Join with code'}</span>
               </button>
             </div>
 
             {/* Mis eventos */}
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.misEventos}</h2>
-            {cargando ? (
-              <div style={{ textAlign: 'center' as any, padding: '40px', color: '#8B5CF6' }}>Cargando...</div>
-            ) : eventos.length === 0 ? (
-              <div style={{ backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px', textAlign: 'center' as any, minHeight: 140, minHeight: 140, marginBottom: 32, minHeight: 140 }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>{t.sinEventos}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.creaEvento}</div>
-              </div>
-            ) : (
-              eventos.map((evento: any) => (
+            {cargando ? <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
+              : eventos.length === 0 ? (
+                <div className="vacio-box">
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>{t.sinEventos}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.creaEvento}</div>
+                </div>
+              ) : eventos.map((evento: any) => (
                 <div key={evento.id} className="dash-card" onClick={() => router.push({ pathname: '/(tabs)/evento-detalle', params: { id: evento.id, nombre: evento.nombre, codigo: evento.codigo } })}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{evento.nombre}</span>
@@ -306,22 +138,19 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))
-            )}
+            }
 
             {/* Eventos donde participo */}
             <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, marginTop: 8 }}>{t.eventosDondeParticipo}</h2>
-            {cargandoP ? (
-              <div style={{ textAlign: 'center' as any, padding: '40px', color: '#F59E0B' }}>Cargando...</div>
-            ) : participaciones.length === 0 ? (
-              <div style={{ backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px', textAlign: 'center' as any }}>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>🔑</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B', marginBottom: 6 }}>{t.sinParticipar}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.usaCodigo}</div>
-              </div>
-            ) : (
-              participaciones.map((p: any) => (
-                <div key={p.id} className="dash-card dash-card-gold" onClick={() => router.push({ pathname: '/(tabs)/participante-evento', params: { id: p.eventoId, nombre: p.eventoNombre, codigo: '' } })}
-                  style={{ borderColor: 'rgba(245,158,11,0.2)' }}>
+            {cargandoP ? <div style={{ textAlign: 'center' as any, padding: 40, color: '#F59E0B' }}>Cargando...</div>
+              : participaciones.length === 0 ? (
+                <div className="vacio-box">
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>🔑</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B', marginBottom: 6 }}>{t.sinParticipar}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.usaCodigo}</div>
+                </div>
+              ) : participaciones.map((p: any) => (
+                <div key={p.id} className="dash-card dash-card-gold" onClick={() => router.push({ pathname: '/(tabs)/participante-evento', params: { id: p.eventoId, nombre: p.eventoNombre, codigo: '' } })} style={{ borderColor: 'rgba(245,158,11,0.2)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{p.eventoNombre}</span>
                     <span style={{ color: '#F59E0B' }}>→</span>
@@ -331,14 +160,13 @@ export default function Dashboard() {
                   </span>
                 </div>
               ))
-            )}
+            }
           </div>
         </div>
       </>
     );
   }
 
-  // Versión móvil
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
@@ -370,7 +198,6 @@ export default function Dashboard() {
             </View>
           </View>
         </LinearGradient>
-
         <View style={styles.contenido}>
           <View style={styles.accionesRow}>
             <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/crear-evento')}>
@@ -386,18 +213,15 @@ export default function Dashboard() {
               </LinearGradient>
             </TouchableOpacity>
           </View>
-
           <Text style={styles.seccionTitulo}>{t.misEventos}</Text>
-          {cargando ? (
-            <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} />
-          ) : eventos.length === 0 ? (
-            <View style={styles.vacio}>
-              <Text style={styles.vacioEmoji}>🎉</Text>
-              <Text style={styles.vacioTexto}>{t.sinEventos}</Text>
-              <Text style={styles.vacioSubtexto}>{t.creaEvento}</Text>
-            </View>
-          ) : (
-            eventos.map((evento: any) => (
+          {cargando ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} />
+            : eventos.length === 0 ? (
+              <View style={styles.vacio}>
+                <Text style={styles.vacioEmoji}>🎉</Text>
+                <Text style={styles.vacioTexto}>{t.sinEventos}</Text>
+                <Text style={styles.vacioSubtexto}>{t.creaEvento}</Text>
+              </View>
+            ) : eventos.map((evento: any) => (
               <TouchableOpacity key={evento.id} style={styles.tarjeta} onPress={() => router.push({ pathname: '/(tabs)/evento-detalle', params: { id: evento.id, nombre: evento.nombre, codigo: evento.codigo } })}>
                 <View style={styles.tarjetaHeader}>
                   <Text style={styles.tarjetaNombre}>{evento.nombre}</Text>
@@ -410,19 +234,16 @@ export default function Dashboard() {
                 </View>
               </TouchableOpacity>
             ))
-          )}
-
+          }
           <Text style={styles.seccionTitulo}>{t.eventosDondeParticipo}</Text>
-          {cargandoP ? (
-            <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} />
-          ) : participaciones.length === 0 ? (
-            <View style={styles.vacio}>
-              <Text style={styles.vacioEmoji}>🔑</Text>
-              <Text style={styles.vacioTexto}>{t.sinParticipar}</Text>
-              <Text style={styles.vacioSubtexto}>{t.usaCodigo}</Text>
-            </View>
-          ) : (
-            participaciones.map((p: any) => (
+          {cargandoP ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} />
+            : participaciones.length === 0 ? (
+              <View style={styles.vacio}>
+                <Text style={styles.vacioEmoji}>🔑</Text>
+                <Text style={styles.vacioTexto}>{t.sinParticipar}</Text>
+                <Text style={styles.vacioSubtexto}>{t.usaCodigo}</Text>
+              </View>
+            ) : participaciones.map((p: any) => (
               <TouchableOpacity key={p.id} style={styles.tarjetaDorada} onPress={() => router.push({ pathname: '/(tabs)/participante-evento', params: { id: p.eventoId, nombre: p.eventoNombre, codigo: '' } })}>
                 <View style={styles.tarjetaHeader}>
                   <Text style={styles.tarjetaNombre}>{p.eventoNombre}</Text>
@@ -433,7 +254,7 @@ export default function Dashboard() {
                 </View>
               </TouchableOpacity>
             ))
-          )}
+          }
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -462,7 +283,7 @@ const styles = StyleSheet.create({
   accionEmoji: { fontSize: 28, marginBottom: 8 },
   accionTexto: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
   seccionTitulo: { fontSize: 18, fontWeight: 'bold', color: '#F8FAFC', marginBottom: 12, marginTop: 4 },
-  vacio: { backgroundColor: '#161B2E', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#2D3343' },
+  vacio: { backgroundColor: '#161B2E', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#2D3343', minHeight: 140, justifyContent: 'center' },
   vacioEmoji: { fontSize: 36, marginBottom: 10 },
   vacioTexto: { fontSize: 15, fontWeight: 'bold', color: '#8B5CF6', marginBottom: 4 },
   vacioSubtexto: { fontSize: 13, color: '#6B7280', textAlign: 'center' },
