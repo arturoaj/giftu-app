@@ -42,41 +42,28 @@ export default function ParticipanteEvento() {
   };
 
   const handleApartar = async (regalo: any) => {
-    if (regalo.estado === 'apartado') {
-      mostrarAlerta(t.error, t.noDisponible);
-      return;
-    }
+    if (regalo.estado === 'apartado') { mostrarAlerta(t.error, t.noDisponible); return; }
     const confirmar = Platform.OS === 'web'
       ? window.confirm(`${t.quieresApartar} "${regalo.nombre}"?`)
       : await new Promise(resolve => Alert.alert(t.apartarRegalo, `${t.quieresApartar} "${regalo.nombre}"?`, [{ text: t.cancelar, style: 'cancel', onPress: () => resolve(false) }, { text: t.siApartar, onPress: () => resolve(true) }]));
-
     if (!confirmar) return;
     try {
       await updateDoc(doc(db, 'eventos', id as string, 'regalos', regalo.id), { estado: 'apartado' });
-      await addDoc(collection(db, 'apartados_privados'), {
-        usuarioId: usuario?.uid, usuarioEmail: usuario?.email,
-        eventoId: id, regaloId: regalo.id, regaloNombre: regalo.nombre,
-        fechaApartado: new Date(), cancelado: false,
-      });
+      await addDoc(collection(db, 'apartados_privados'), { usuarioId: usuario?.uid, usuarioEmail: usuario?.email, eventoId: id, regaloId: regalo.id, regaloNombre: regalo.nombre, fechaApartado: new Date(), cancelado: false });
       mostrarAlerta('🎉', t.apartadoExito);
-    } catch (error) {
-      mostrarAlerta(t.error, t.errorApartar);
-    }
+    } catch { mostrarAlerta(t.error, t.errorApartar); }
   };
 
   const handleCancelar = async (apartado: any) => {
     const confirmar = Platform.OS === 'web'
       ? window.confirm(`${t.quieresLiberar} "${apartado.regaloNombre}"?`)
       : await new Promise(resolve => Alert.alert(t.cancelarApartadoPregunta, `${t.quieresLiberar} "${apartado.regaloNombre}"?`, [{ text: t.cancelar, style: 'cancel', onPress: () => resolve(false) }, { text: t.siCancelar, onPress: () => resolve(true) }]));
-
     if (!confirmar) return;
     try {
       await updateDoc(doc(db, 'eventos', id as string, 'regalos', apartado.regaloId), { estado: 'disponible' });
       await deleteDoc(doc(db, 'apartados_privados', apartado.id));
       mostrarAlerta(t.listo, t.regaloCancelado);
-    } catch (error) {
-      mostrarAlerta(t.error, t.errorCancelar);
-    }
+    } catch { mostrarAlerta(t.error, t.errorCancelar); }
   };
 
   const misApartadosIds = misApartados.map((a: any) => a.regaloId);
@@ -88,75 +75,87 @@ export default function ParticipanteEvento() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { background: #0a0818; }
+          html, body { background: #0a0818; margin: 0; padding: 0; }
           .regalo-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px; margin-bottom: 12px; transition: all 0.2s; cursor: pointer; }
           .regalo-card:hover { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.06); transform: translateY(-1px); }
           .regalo-card-yo { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); }
           .regalo-card-no { opacity: 0.5; cursor: not-allowed; }
           .regalo-card-no:hover { transform: none; border-color: rgba(255,255,255,0.07); background: rgba(22,27,46,0.8); }
-          .btn-cancelar-apartado { padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); color: #EF4444; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+          .btn-cancelar-apartado { padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); color: #EF4444; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
           .btn-cancelar-apartado:hover { background: rgba(239,68,68,0.2); }
           .btn-regresar { background: rgba(22,27,46,0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 8px 16px; color: #8B5CF6; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
           .btn-regresar:hover { background: rgba(139,92,246,0.1); }
         `}</style>
 
-        {/* Navbar */}
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 24 }}>🎁</span>
-            <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Giftu</span>
-          </div>
-          <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
-        </div>
+        {/* Página completa con fondo oscuro */}
+        <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-        <div style={{ backgroundColor: '#0a0818', minHeight: '100vh', fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '32px 24px', maxWidth: 900, margin: '0 auto' }}>
-
-          {/* Header */}
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{nombre}</h1>
-          <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 32 }}>
-            🎁 {regalosDisponibles} {idioma === 'es' ? 'regalos disponibles de' : 'gifts available of'} {totalRegalos}
-          </p>
-
-          {/* Mis apartados */}
-          {misApartados.length > 0 && (
-            <div style={{ backgroundColor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 16, padding: 20, marginBottom: 28 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#10B981', marginBottom: 16 }}>{t.misRegalosApartados}</h3>
-              {misApartados.map((apartado: any) => (
-                <div key={apartado.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(22,27,46,0.8)', borderRadius: 12, padding: '12px 16px', marginBottom: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#F8FAFC' }}>{apartado.regaloNombre}</span>
-                  <button className="btn-cancelar-apartado" onClick={() => handleCancelar(apartado)}>{t.cancelarApartado}</button>
-                </div>
-              ))}
+          {/* Navbar */}
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 24 }}>🎁</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Giftu</span>
             </div>
-          )}
+            <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
+          </div>
 
-          {/* Lista de regalos */}
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.listaRegalos}</h2>
+          {/* Contenido centrado */}
+          <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 24px' }}>
 
-          {cargando ? (
-            <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
-          ) : (
-            regalos.map((regalo: any) => {
-              const yoAparte = misApartadosIds.includes(regalo.id);
-              const disponible = regalo.estado !== 'apartado';
-              return (
-                <div
-                  key={regalo.id}
-                  className={`regalo-card ${yoAparte ? 'regalo-card-yo' : ''} ${!disponible && !yoAparte ? 'regalo-card-no' : ''}`}
-                  onClick={() => disponible && !yoAparte && handleApartar(regalo)}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <span style={{ fontSize: 16, fontWeight: 700, color: !disponible && !yoAparte ? '#6B7280' : '#fff', flex: 1 }}>{regalo.nombre}</span>
-                    {yoAparte && <span style={{ fontSize: 18, color: '#10B981' }}>✓</span>}
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 8 }}>{nombre}</h1>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 32 }}>
+              🎁 {regalosDisponibles} {idioma === 'es' ? 'regalos disponibles de' : 'gifts available of'} {totalRegalos}
+            </p>
+
+            {/* Mis apartados */}
+            {misApartados.length > 0 && (
+              <div style={{ backgroundColor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 16, padding: 20, marginBottom: 28 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#10B981', marginBottom: 16 }}>{t.misRegalosApartados}</h3>
+                {misApartados.map((apartado: any) => (
+                  <div key={apartado.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(22,27,46,0.8)', borderRadius: 12, padding: '12px 16px', marginBottom: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#F8FAFC' }}>{apartado.regaloNombre}</span>
+                    <button className="btn-cancelar-apartado" onClick={() => handleCancelar(apartado)}>{t.cancelarApartado}</button>
                   </div>
-                  {regalo.precio && <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>💰 ${regalo.precio}</div>}
-                  <span style={{ fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20, backgroundColor: yoAparte ? 'rgba(16,185,129,0.1)' : disponible ? 'rgba(139,92,246,0.1)' : 'rgba(107,114,128,0.1)', color: yoAparte ? '#10B981' : disponible ? '#8B5CF6' : '#6B7280', border: `1px solid ${yoAparte ? 'rgba(16,185,129,0.3)' : disponible ? 'rgba(139,92,246,0.3)' : 'rgba(107,114,128,0.3)'}` }}>
-                    {yoAparte ? `✓ ${t.tuLoApartaste}` : disponible ? `✅ ${t.disponibleApartar}` : `🔒 ${t.noDisponible}`}
-                  </span>
-                </div>
-              );
-            })
-          )}
+                ))}
+              </div>
+            )}
+
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.listaRegalos}</h2>
+
+            {cargando ? (
+              <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
+            ) : regalos.length === 0 ? (
+              <div style={{ background: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 40, textAlign: 'center' as any }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>{t.sinRegalos}</div>
+              </div>
+            ) : (
+              regalos.map((regalo: any) => {
+                const yoAparte = misApartadosIds.includes(regalo.id);
+                const disponible = regalo.estado !== 'apartado';
+                return (
+                  <div key={regalo.id}
+                    className={`regalo-card ${yoAparte ? 'regalo-card-yo' : ''} ${!disponible && !yoAparte ? 'regalo-card-no' : ''}`}
+                    onClick={() => disponible && !yoAparte && handleApartar(regalo)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: !disponible && !yoAparte ? '#6B7280' : '#fff', flex: 1 }}>{regalo.nombre}</span>
+                      {yoAparte && <span style={{ fontSize: 18, color: '#10B981' }}>✓</span>}
+                    </div>
+                    {regalo.precio && <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>💰 ${regalo.precio}</div>}
+                    <span style={{
+                      fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 20,
+                      backgroundColor: yoAparte ? 'rgba(16,185,129,0.1)' : disponible ? 'rgba(139,92,246,0.1)' : 'rgba(107,114,128,0.1)',
+                      color: yoAparte ? '#10B981' : disponible ? '#8B5CF6' : '#6B7280',
+                      border: `1px solid ${yoAparte ? 'rgba(16,185,129,0.3)' : disponible ? 'rgba(139,92,246,0.3)' : 'rgba(107,114,128,0.3)'}`
+                    }}>
+                      {yoAparte ? `✓ ${t.tuLoApartaste}` : disponible ? `✅ ${t.disponibleApartar}` : `🔒 ${t.noDisponible}`}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </>
     );
@@ -188,9 +187,7 @@ export default function ParticipanteEvento() {
             </View>
           )}
           <Text style={styles.seccionTitulo}>{t.listaRegalos}</Text>
-          {cargando ? (
-            <ActivityIndicator size="large" color="#8B5CF6" />
-          ) : (
+          {cargando ? <ActivityIndicator size="large" color="#8B5CF6" /> : (
             regalos.map((regalo: any) => {
               const yoAparte = misApartadosIds.includes(regalo.id);
               const disponible = regalo.estado !== 'apartado';
