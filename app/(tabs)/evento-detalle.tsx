@@ -47,7 +47,7 @@ export default function EventoDetalle() {
   const handleCompartir = async () => {
     if (Platform.OS === 'web') {
       try {
-        await navigator.clipboard.writeText(`🎁 ${t.mensajeCompartir} "${nombre}"\n\nCódigo: ${codigo}\n\ngiftu-app.vercel.app`);
+        await navigator.clipboard.writeText(`🎁 Evento: "${nombre}"\nCódigo: ${codigo}\ngiftu-app.vercel.app`);
         window.alert(idioma === 'es' ? '✅ Código copiado al portapapeles' : '✅ Code copied to clipboard');
       } catch {
         window.alert(`Código del evento: ${codigo}`);
@@ -55,34 +55,26 @@ export default function EventoDetalle() {
     } else {
       try {
         await Share.share({ message: `🎁 ${t.mensajeCompartir} "${nombre}"\n\n${t.uneteConCodigo} *${codigo}*\n\n${t.descargaApp}` });
-      } catch (error) {
-        Alert.alert(t.error, 'No se pudo compartir');
-      }
+      } catch { Alert.alert(t.error, 'No se pudo compartir'); }
     }
   };
 
   const handleSeleccionarImagen = async () => {
     if (Platform.OS === 'web') {
       const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
+      input.type = 'file'; input.accept = 'image/*';
       input.onchange = (e: any) => {
         const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (ev: any) => setImagenRegalo(ev.target.result);
-          reader.readAsDataURL(file);
-        }
+        if (file) { const reader = new FileReader(); reader.onload = (ev: any) => setImagenRegalo(ev.target.result); reader.readAsDataURL(file); }
       };
-      input.click();
-      return;
+      input.click(); return;
     }
     try {
       const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permiso.granted) { Alert.alert(t.error, idioma === 'es' ? 'Necesitamos acceso a tu galería' : 'We need access to your gallery'); return; }
       const resultado = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.5, base64: true });
       if (!resultado.canceled && resultado.assets[0].base64) setImagenRegalo(`data:image/jpeg;base64,${resultado.assets[0].base64}`);
-    } catch (error) { Alert.alert(t.error, idioma === 'es' ? 'No se pudo seleccionar la imagen' : 'Could not select image'); }
+    } catch { Alert.alert(t.error, idioma === 'es' ? 'No se pudo seleccionar la imagen' : 'Could not select image'); }
   };
 
   const handleCargarPreview = async () => {
@@ -100,9 +92,8 @@ export default function EventoDetalle() {
       } else {
         mostrarAlerta(idioma === 'es' ? 'Sin vista previa' : 'No preview', idioma === 'es' ? 'No se pudo cargar la información' : 'Could not load info');
       }
-    } catch (error) {
-      mostrarAlerta(idioma === 'es' ? 'Sin vista previa' : 'No preview', idioma === 'es' ? 'No se pudo cargar la información' : 'Could not load info');
-    } finally { setCargandoPreview(false); }
+    } catch { mostrarAlerta(idioma === 'es' ? 'Sin vista previa' : 'No preview', idioma === 'es' ? 'No se pudo cargar la información' : 'Could not load info'); }
+    finally { setCargandoPreview(false); }
   };
 
   const handleAgregarRegalo = async () => {
@@ -111,7 +102,7 @@ export default function EventoDetalle() {
       await addDoc(collection(db, 'eventos', id as string, 'regalos'), { nombre: nombreRegalo.trim(), precio: precioRegalo.trim(), link: linkRegalo.trim(), imagen: imagenRegalo, estado: 'disponible', creadoEn: new Date() });
       setNombreRegalo(''); setPrecioRegalo(''); setLinkRegalo(''); setImagenRegalo(''); setMostrarFormulario(false);
       mostrarAlerta(t.listo, t.regaloAgregado);
-    } catch (error) { mostrarAlerta(t.error, t.errorAgregar); }
+    } catch { mostrarAlerta(t.error, t.errorAgregar); }
   };
 
   const handleEliminarRegalo = async (regalo: any) => {
@@ -139,25 +130,26 @@ export default function EventoDetalle() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { background: #0a0818; }
-          .web-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px; margin-bottom: 12px; transition: border-color 0.2s; }
-          .web-card:hover { border-color: rgba(139,92,246,0.3); }
+          html, body { background: #0a0818; min-height: 100%; }
+          .web-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; transition: border-color 0.2s; }
+          .web-card:hover { border-color: rgba(139,92,246,0.2); }
           .web-input { width: 100%; background: rgba(30,37,64,0.9); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #F8FAFC; outline: none; font-family: inherit; margin-bottom: 12px; transition: border-color 0.2s; }
           .web-input:focus { border-color: rgba(139,92,246,0.6); }
           .web-input::placeholder { color: #4B5563; }
-          .btn-primary { padding: 13px 20px; background: linear-gradient(90deg, #8B5CF6, #A855F7); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; width: 100%; margin-bottom: 10px; }
+          .btn-primary { padding: 14px 20px; background: linear-gradient(90deg, #8B5CF6, #A855F7); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; width: 100%; margin-bottom: 10px; }
           .btn-primary:hover { opacity: 0.88; }
-          .btn-secondary { padding: 12px 20px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #6B7280; font-size: 14px; cursor: pointer; font-family: inherit; transition: background 0.2s; width: 100%; }
+          .btn-secondary { padding: 12px 20px; background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #6B7280; font-size: 14px; cursor: pointer; font-family: inherit; width: 100%; }
           .btn-secondary:hover { background: rgba(255,255,255,0.04); }
-          .btn-regresar { background: rgba(22,27,46,0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 8px 16px; color: #8B5CF6; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+          .btn-regresar { background: rgba(22,27,46,0.95); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 8px 16px; color: #8B5CF6; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
           .btn-regresar:hover { background: rgba(139,92,246,0.1); }
-          .btn-compartir { padding: 10px 18px; background: linear-gradient(90deg, #8B5CF6, #A855F7); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
-          .btn-eliminar { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; }
+          .btn-compartir { padding: 10px 20px; background: linear-gradient(90deg, #8B5CF6, #A855F7); border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+          .btn-eliminar { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 8px; }
+          .btn-eliminar:hover { background: rgba(239,68,68,0.1); }
           .btn-link { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; padding: 4px 12px; color: #8B5CF6; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-          .btn-cargar { background: #8B5CF6; border: none; border-radius: 10px; padding: 12px 16px; color: #fff; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+          .btn-cargar { background: #8B5CF6; border: none; border-radius: 10px; padding: 12px 16px; color: #fff; font-size: 18px; cursor: pointer; flex-shrink: 0; transition: opacity 0.2s; }
+          .btn-cargar:hover { opacity: 0.85; }
           .progreso-barra { height: 8px; background: rgba(30,37,64,0.9); border-radius: 4px; overflow: hidden; }
-          .progreso-relleno { height: 8px; background: linear-gradient(90deg, #8B5CF6, #F59E0B); border-radius: 4px; transition: width 0.3s; }
-          @media (max-width: 768px) { .sidebar { display: none !important; } .main-col { width: 100% !important; } }
+          .progreso-relleno { height: 8px; background: linear-gradient(90deg, #8B5CF6, #F59E0B); border-radius: 4px; }
         `}</style>
 
         {/* Navbar */}
@@ -169,14 +161,14 @@ export default function EventoDetalle() {
           <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
         </div>
 
-        <div style={{ backgroundColor: '#0a0818', minHeight: '100vh', fontFamily: "'Segoe UI', system-ui, sans-serif", padding: '32px 24px', maxWidth: 900, margin: '0 auto' }}>
+        {/* Contenido */}
+        <div style={{ backgroundColor: '#0a0818', minHeight: 'calc(100vh - 64px)', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+          <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 40px' }}>
 
-          {/* Header */}
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 16 }}>{nombre}</h1>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 20 }}>{nombre}</h1>
 
-            {/* Código box */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px 20px', marginBottom: 16 }}>
+            {/* Código */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px 24px', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>{t.codigoParaCompartir}</div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#F59E0B', letterSpacing: 6 }}>{codigo}</div>
@@ -186,93 +178,89 @@ export default function EventoDetalle() {
 
             {/* Progreso */}
             {totalRegalos > 0 && (
-              <div style={{ background: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '16px 20px' }}>
+              <div className="web-card" style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span style={{ fontSize: 13, color: '#94A3B8' }}>🎁 {regalosApartados}/{totalRegalos} {t.apartado}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: '#F59E0B' }}>{Math.round(progreso * 100)}%</span>
                 </div>
-                <div className="progreso-barra">
-                  <div className="progreso-relleno" style={{ width: `${progreso * 100}%` }} />
-                </div>
+                <div className="progreso-barra"><div className="progreso-relleno" style={{ width: `${progreso * 100}%` }} /></div>
               </div>
             )}
-          </div>
 
-          {/* Lista de regalos */}
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.listaRegalos}</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.listaRegalos}</h2>
 
-          {cargando ? (
-            <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
-          ) : regalos.length === 0 ? (
-            <div className="web-card" style={{ textAlign: 'center' as any, padding: 40 }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>{t.sinRegalos}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.agregaPrimero}</div>
-            </div>
-          ) : (
-            regalos.map((regalo: any) => (
-              <div key={regalo.id} className="web-card">
-                <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                  {regalo.imagen ? (
-                    <img src={regalo.imagen} style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: 80, height: 80, borderRadius: 12, background: 'rgba(30,37,64,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>🎁</div>
-                  )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                      <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{regalo.nombre}</span>
-                      <button className="btn-eliminar" onClick={() => handleEliminarRegalo(regalo)}>🗑</button>
-                    </div>
-                    {regalo.precio && <div style={{ fontSize: 13, color: '#F59E0B', fontWeight: 600, marginBottom: 8 }}>💰 ${regalo.precio}</div>}
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' as any }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, backgroundColor: regalo.estado === 'apartado' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', color: regalo.estado === 'apartado' ? '#F59E0B' : '#10B981', border: `1px solid ${regalo.estado === 'apartado' ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}` }}>
-                        {regalo.estado === 'apartado' ? `🔒 ${t.apartado}` : `✅ ${t.disponible}`}
-                      </span>
-                      {regalo.link && <button className="btn-link" onClick={() => handleAbrirLink(regalo.link)}>🔗 {idioma === 'es' ? 'Ver en tienda' : 'View in store'}</button>}
+            {cargando ? (
+              <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
+            ) : regalos.length === 0 ? (
+              <div className="web-card" style={{ textAlign: 'center' as any, padding: 40, marginBottom: 16 }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>{t.sinRegalos}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.agregaPrimero}</div>
+              </div>
+            ) : (
+              regalos.map((regalo: any) => (
+                <div key={regalo.id} className="web-card">
+                  <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                    {regalo.imagen
+                      ? <img src={regalo.imagen} style={{ width: 80, height: 80, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+                      : <div style={{ width: 80, height: 80, borderRadius: 12, background: 'rgba(30,37,64,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>🎁</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: 8 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', flex: 1 }}>{regalo.nombre}</span>
+                        <button className="btn-eliminar" onClick={() => handleEliminarRegalo(regalo)}>🗑</button>
+                      </div>
+                      {regalo.precio && <div style={{ fontSize: 13, color: '#F59E0B', fontWeight: 600, marginBottom: 8 }}>💰 ${regalo.precio}</div>}
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as any }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, backgroundColor: regalo.estado === 'apartado' ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', color: regalo.estado === 'apartado' ? '#F59E0B' : '#10B981', border: `1px solid ${regalo.estado === 'apartado' ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}` }}>
+                          {regalo.estado === 'apartado' ? `🔒 ${t.apartado}` : `✅ ${t.disponible}`}
+                        </span>
+                        {regalo.link && <button className="btn-link" onClick={() => handleAbrirLink(regalo.link)}>🔗 {idioma === 'es' ? 'Ver en tienda' : 'View in store'}</button>}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
 
-          {/* Formulario agregar regalo */}
-          {mostrarFormulario ? (
-            <div className="web-card" style={{ marginTop: 16 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 20 }}>✨ {t.nuevoRegalo}</h3>
+            {/* Formulario */}
+            {mostrarFormulario ? (
+              <div className="web-card" style={{ marginTop: 16 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', marginBottom: 20 }}>✨ {t.nuevoRegalo}</h3>
 
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{idioma === 'es' ? '🔗 Link de tienda' : '🔗 Store link'}</label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                <input className="web-input" type="url" placeholder="amazon.com/producto..." value={linkRegalo} onChange={(e: any) => setLinkRegalo(e.target.value)} style={{ marginBottom: 0, flex: 1 }} />
-                <button className="btn-cargar" onClick={handleCargarPreview} disabled={cargandoPreview}>{cargandoPreview ? '...' : '⚡'}</button>
-              </div>
-              <p style={{ fontSize: 11, color: '#6B7280', marginBottom: 16 }}>{idioma === 'es' ? '⚡ Clic en el rayo para cargar info automáticamente' : '⚡ Click lightning to load info automatically'}</p>
-
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{idioma === 'es' ? '📷 Foto del regalo' : '📷 Gift photo'}</label>
-              {imagenRegalo ? (
-                <div style={{ marginBottom: 16 }}>
-                  <img src={imagenRegalo} style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12 }} />
-                  <button onClick={() => setImagenRegalo('')} style={{ marginTop: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: '6px 16px', color: '#EF4444', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>✕ {idioma === 'es' ? 'Quitar foto' : 'Remove photo'}</button>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{idioma === 'es' ? '🔗 Link de tienda' : '🔗 Store link'}</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                  <input className="web-input" type="url" placeholder="amazon.com/producto..." value={linkRegalo} onChange={(e: any) => setLinkRegalo(e.target.value)} style={{ marginBottom: 0, flex: 1 }} />
+                  <button className="btn-cargar" onClick={handleCargarPreview} disabled={cargandoPreview}>{cargandoPreview ? '...' : '⚡'}</button>
                 </div>
-              ) : (
-                <div onClick={handleSeleccionarImagen} style={{ background: 'rgba(30,37,64,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', marginBottom: 16 }}>
-                  <span style={{ fontSize: 28 }}>📷</span>
-                  <span style={{ color: '#6B7280', fontSize: 14 }}>{idioma === 'es' ? 'Clic para agregar foto' : 'Click to add photo'}</span>
-                </div>
-              )}
+                <p style={{ fontSize: 11, color: '#6B7280', marginBottom: 16 }}>{idioma === 'es' ? '⚡ Clic en el rayo para cargar info automáticamente' : '⚡ Click lightning to load info automatically'}</p>
 
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.nombreRegalo}</label>
-              <input className="web-input" type="text" placeholder={t.ejNombre} value={nombreRegalo} onChange={(e: any) => setNombreRegalo(e.target.value)} />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{idioma === 'es' ? '📷 Foto del regalo' : '📷 Gift photo'}</label>
+                {imagenRegalo ? (
+                  <div style={{ marginBottom: 16 }}>
+                    <img src={imagenRegalo} style={{ width: '100%', height: 180, objectFit: 'cover', borderRadius: 12 }} />
+                    <button onClick={() => setImagenRegalo('')} style={{ marginTop: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: '6px 16px', color: '#EF4444', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>✕ {idioma === 'es' ? 'Quitar foto' : 'Remove photo'}</button>
+                  </div>
+                ) : (
+                  <div onClick={handleSeleccionarImagen} style={{ background: 'rgba(30,37,64,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, cursor: 'pointer', marginBottom: 16 }}>
+                    <span style={{ fontSize: 28 }}>📷</span>
+                    <span style={{ color: '#6B7280', fontSize: 14 }}>{idioma === 'es' ? 'Clic para agregar foto' : 'Click to add photo'}</span>
+                  </div>
+                )}
 
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.precio}</label>
-              <input className="web-input" type="number" placeholder="0.00" value={precioRegalo} onChange={(e: any) => setPrecioRegalo(e.target.value)} />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.nombreRegalo}</label>
+                <input className="web-input" type="text" placeholder={t.ejNombre} value={nombreRegalo} onChange={(e: any) => setNombreRegalo(e.target.value)} />
 
-              <button className="btn-primary" onClick={handleAgregarRegalo}>{t.guardarRegalo}</button>
-              <button className="btn-secondary" onClick={() => { setMostrarFormulario(false); setImagenRegalo(''); setLinkRegalo(''); setNombreRegalo(''); setPrecioRegalo(''); }}>{t.cancelar}</button>
-            </div>
-          ) : (
-            <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => setMostrarFormulario(true)}>{t.agregarRegalo}</button>
-          )}
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.precio}</label>
+                <input className="web-input" type="number" placeholder="0.00" value={precioRegalo} onChange={(e: any) => setPrecioRegalo(e.target.value)} />
+
+                <button className="btn-primary" onClick={handleAgregarRegalo}>{t.guardarRegalo}</button>
+                <button className="btn-secondary" onClick={() => { setMostrarFormulario(false); setImagenRegalo(''); setLinkRegalo(''); setNombreRegalo(''); setPrecioRegalo(''); }}>{t.cancelar}</button>
+              </div>
+            ) : (
+              <button className="btn-primary" style={{ marginTop: 16 }} onClick={() => setMostrarFormulario(true)}>{t.agregarRegalo}</button>
+            )}
+          </div>
         </div>
       </>
     );
@@ -312,9 +300,7 @@ export default function EventoDetalle() {
         </View>
         <View style={styles.contenido}>
           <Text style={styles.seccionTitulo}>{t.listaRegalos}</Text>
-          {cargando ? (
-            <ActivityIndicator size="large" color="#8B5CF6" />
-          ) : regalos.length === 0 ? (
+          {cargando ? <ActivityIndicator size="large" color="#8B5CF6" /> : regalos.length === 0 ? (
             <View style={styles.vacio}>
               <Text style={styles.vacioEmoji}>🎁</Text>
               <Text style={styles.vacioTexto}>{t.sinRegalos}</Text>
