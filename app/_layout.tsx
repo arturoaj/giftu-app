@@ -13,7 +13,9 @@ export const unstable_settings = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  if (Platform.OS === 'web') {
+  const isMobileWeb = Platform.OS === 'web' && typeof window !== 'undefined' && window.innerWidth < 768;
+
+  if (Platform.OS === 'web' && !isMobileWeb) {
     return (
       <IdiomaProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
