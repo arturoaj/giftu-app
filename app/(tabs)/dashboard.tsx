@@ -121,7 +121,7 @@ export default function Dashboard() {
           .btn-logout:hover { border-color: #EF4444; color: #EF4444; }
         `}</style>
 
-        <div style={{ minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif", overflowY: 'auto' as any }}>
 
           {/* Navbar */}
           <div style={{
