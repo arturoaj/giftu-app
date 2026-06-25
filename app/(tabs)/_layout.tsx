@@ -16,6 +16,7 @@ export default function TabLayout() {
       <Tabs.Screen name="evento-detalle" />
       <Tabs.Screen name="unirse" />
       <Tabs.Screen name="participante-evento" />
+      <Tabs.Screen name="verificar-email" />
     </Tabs>
   );
 }
