@@ -29,26 +29,46 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert(t.error, t.errorCampos);
+      if (Platform.OS === 'web') {
+        window.alert(idioma === 'es' ? 'Ingresa tu correo y contraseña' : 'Enter your email and password');
+      } else {
+        Alert.alert(t.error, t.errorCampos);
+      }
       return;
     }
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      Alert.alert(t.error, t.errorCredenciales);
+      if (Platform.OS === 'web') {
+        window.alert(idioma === 'es' ? 'Correo o contraseña incorrectos' : 'Incorrect email or password');
+      } else {
+        Alert.alert(t.error, t.errorCredenciales);
+      }
     }
   };
 
   const handleOlvideContrasena = async () => {
     if (!email) {
-      Alert.alert(t.error, idioma === 'es' ? 'Ingresa tu correo primero' : 'Enter your email first');
+      if (Platform.OS === 'web') {
+        window.alert(idioma === 'es' ? 'Ingresa tu correo primero' : 'Enter your email first');
+      } else {
+        Alert.alert(t.error, idioma === 'es' ? 'Ingresa tu correo primero' : 'Enter your email first');
+      }
       return;
     }
     try {
       await sendPasswordResetEmail(auth, email);
-      Alert.alert('✅', idioma === 'es' ? `Enviamos un link a ${email} para restablecer tu contraseña` : `We sent a reset link to ${email}`);
+      if (Platform.OS === 'web') {
+        window.alert(idioma === 'es' ? `✅ Enviamos un link a ${email} para restablecer tu contraseña` : `✅ We sent a reset link to ${email}`);
+      } else {
+        Alert.alert('✅', idioma === 'es' ? `Enviamos un link a ${email}` : `We sent a reset link to ${email}`);
+      }
     } catch (error) {
-      Alert.alert(t.error, idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
+      if (Platform.OS === 'web') {
+        window.alert(idioma === 'es' ? 'No se pudo enviar el correo. Verifica que esté registrado.' : 'Could not send email. Make sure it is registered.');
+      } else {
+        Alert.alert(t.error, idioma === 'es' ? 'No se pudo enviar el correo' : 'Could not send email');
+      }
     }
   };
 
@@ -57,7 +77,11 @@ export default function Login() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error) {
-      Alert.alert(t.error, idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
+      if (Platform.OS === 'web') {
+        window.alert(idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
+      } else {
+        Alert.alert(t.error, idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
+      }
     }
   };
 
@@ -246,7 +270,7 @@ export default function Login() {
               background: 'linear-gradient(90deg, #8B5CF6, #F59E0B)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>
-              {idioma === 'es' ? 'spoilers' : 'spoilers'}
+              spoilers
             </h1>
 
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', marginBottom: 48, lineHeight: 1.7, maxWidth: 320 }}>
