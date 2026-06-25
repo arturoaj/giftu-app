@@ -39,7 +39,105 @@ export default function Dashboard() {
   }, [usuario]);
 
   const handleLogout = async () => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === 'web') {if (Platform.OS === 'web') {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
+    if (isMobile) {
+      // En móvil web mostrar igual que la app
+      return (
+        <View style={styles.container}>
+          <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <LinearGradient colors={['#161B2E', '#0D0D0D']} style={styles.header}>
+              <View style={styles.headerTop}>
+                <View>
+                  <Text style={styles.saludo}>{idioma === 'es' ? '¡Hola,' : 'Hello,'} <Text style={styles.saludoNombre}>{nombre} 👋</Text></Text>
+                  <Text style={styles.saludoSub}>{idioma === 'es' ? 'Bienvenido a Giftu' : 'Welcome to Giftu'}</Text>
+                </View>
+                <TouchableOpacity onPress={handleLogout} style={styles.botonSalirIcon}>
+                  <Text style={styles.botonSalirIconTexto}>⎋</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.statsContainer}>
+                <View style={styles.statBox}>
+                  <Text style={styles.statNumero}>{eventos.length}</Text>
+                  <Text style={styles.statLabel}>{idioma === 'es' ? 'Eventos' : 'Events'}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statBox}>
+                  <Text style={styles.statNumero}>{participaciones.length}</Text>
+                  <Text style={styles.statLabel}>{idioma === 'es' ? 'Participo' : 'Joined'}</Text>
+                </View>
+                <View style={styles.statDivider} />
+                <View style={styles.statBox}>
+                  <Text style={styles.statNumero}>🎁</Text>
+                  <Text style={styles.statLabel}>Giftu</Text>
+                </View>
+              </View>
+            </LinearGradient>
+            <View style={styles.contenido}>
+              <View style={styles.accionesRow}>
+                <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/crear-evento')}>
+                  <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.accionGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <Text style={styles.accionEmoji}>✨</Text>
+                    <Text style={styles.accionTexto}>{idioma === 'es' ? 'Crear\nevento' : 'Create\nevent'}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.accionBoton} onPress={() => router.push('/(tabs)/unirse')}>
+                  <LinearGradient colors={['#F59E0B', '#FBBF24']} style={styles.accionGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <Text style={styles.accionEmoji}>🔑</Text>
+                    <Text style={styles.accionTexto}>{idioma === 'es' ? 'Unirse\ncon código' : 'Join\nwith code'}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.seccionTitulo}>{t.misEventos}</Text>
+              {cargando ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} /> : eventos.length === 0 ? (
+                <View style={styles.vacio}>
+                  <Text style={styles.vacioEmoji}>🎉</Text>
+                  <Text style={styles.vacioTexto}>{t.sinEventos}</Text>
+                  <Text style={styles.vacioSubtexto}>{t.creaEvento}</Text>
+                </View>
+              ) : (
+                eventos.map((evento: any) => (
+                  <TouchableOpacity key={evento.id} style={styles.tarjeta} onPress={() => router.push({ pathname: '/(tabs)/evento-detalle', params: { id: evento.id, nombre: evento.nombre, codigo: evento.codigo } })}>
+                    <View style={styles.tarjetaHeader}>
+                      <Text style={styles.tarjetaNombre}>{evento.nombre}</Text>
+                      <Text style={styles.tarjetaFlecha}>→</Text>
+                    </View>
+                    {evento.fecha ? <Text style={styles.tarjetaFecha}>📅 {evento.fecha}</Text> : null}
+                    <View style={styles.codigoContainer}>
+                      <Text style={styles.codigoLabel}>{t.codigoParaCompartir}: </Text>
+                      <Text style={styles.codigo}>{evento.codigo}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+              <Text style={styles.seccionTitulo}>{t.eventosDondeParticipo}</Text>
+              {cargandoP ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} /> : participaciones.length === 0 ? (
+                <View style={styles.vacio}>
+                  <Text style={styles.vacioEmoji}>🔑</Text>
+                  <Text style={styles.vacioTexto}>{t.sinParticipar}</Text>
+                  <Text style={styles.vacioSubtexto}>{t.usaCodigo}</Text>
+                </View>
+              ) : (
+                participaciones.map((p: any) => (
+                  <TouchableOpacity key={p.id} style={styles.tarjetaDorada} onPress={() => router.push({ pathname: '/(tabs)/participante-evento', params: { id: p.eventoId, nombre: p.eventoNombre, codigo: '' } })}>
+                    <View style={styles.tarjetaHeader}>
+                      <Text style={styles.tarjetaNombre}>{p.eventoNombre}</Text>
+                      <Text style={styles.tarjetaFlecha}>→</Text>
+                    </View>
+                    <View style={styles.participanteBadge}>
+                      <Text style={styles.participanteTexto}>🎁 {t.participante}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )}
+              <View style={{ height: 40 }} />
+            </View>
+          </ScrollView>
+        </View>
+      );
+    }
       const confirmar = window.confirm(idioma === 'es' ? '¿Cerrar sesión?' : 'Sign out?');
       if (confirmar) {
         try {
