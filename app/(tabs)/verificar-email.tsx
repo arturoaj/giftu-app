@@ -110,19 +110,16 @@ export default function VerificarEmail() {
           {idioma === 'es' ? 'Enviamos un link de verificación a:' : 'We sent a verification link to:'}
         </Text>
         <Text style={styles.email}>{usuario?.email}</Text>
-
         <TouchableOpacity style={styles.botonPrimario} onPress={handleYaVerifique}>
           <Text style={styles.botonPrimarioTexto}>
             {idioma === 'es' ? '✅ Ya verifiqué mi correo' : '✅ I already verified my email'}
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.botonSecundario} onPress={handleReenviar} disabled={enviando}>
           <Text style={styles.botonSecundarioTexto}>
             {enviando ? (idioma === 'es' ? 'Enviando...' : 'Sending...') : (idioma === 'es' ? '📨 Reenviar correo' : '📨 Resend email')}
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity onPress={handleSalir}>
           <Text style={styles.salir}>{idioma === 'es' ? 'Cerrar sesión' : 'Sign out'}</Text>
         </TouchableOpacity>
