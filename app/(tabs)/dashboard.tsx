@@ -287,7 +287,7 @@ export default function Dashboard() {
             {cargando ? (
               <div style={{ textAlign: 'center' as any, padding: '40px', color: '#8B5CF6' }}>Cargando...</div>
             ) : eventos.length === 0 ? (
-              <div style={{ backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px', textAlign: 'center' as any, marginBottom: 32 }}>
+              <div style={{ backgroundColor: 'rgba(22,27,46,0.8)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px', textAlign: 'center' as any, minHeight: 140, minHeight: 140, marginBottom: 32, minHeight: 140 }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>{t.sinEventos}</div>
                 <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.creaEvento}</div>
