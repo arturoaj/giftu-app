@@ -1,18 +1,25 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { useIdioma } from '../IdiomaContext';
 
 export default function Unirse() {
+  const params = useLocalSearchParams();
   const [codigo, setCodigo] = useState('');
   const [cargando, setCargando] = useState(false);
   const router = useRouter();
   const { usuario } = useAuth();
   const { t, idioma } = useIdioma();
+
+  useEffect(() => {
+    if (params.codigo && typeof params.codigo === 'string') {
+      setCodigo(params.codigo.toUpperCase());
+    }
+  }, [params.codigo]);
 
   const mostrarAlerta = (titulo: string, mensaje: string) => {
     if (Platform.OS === 'web') { window.alert(`${titulo}\n\n${mensaje}`); } else { Alert.alert(titulo, mensaje); }
