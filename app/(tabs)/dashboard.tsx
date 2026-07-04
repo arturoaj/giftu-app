@@ -4,12 +4,13 @@ import { signOut } from 'firebase/auth';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useIdioma } from '../../app/IdiomaContext';
 import { auth, db } from '../../firebaseConfig';
+import { useAuth } from '../AuthContext';
+import { useIdioma } from '../IdiomaContext';
 
 export default function Dashboard() {
   const router = useRouter();
-  const usuario = auth.currentUser;
+  const { usuario } = useAuth();
   const { t, idioma } = useIdioma();
   const [eventos, setEventos] = useState([]);
   const [participaciones, setParticipaciones] = useState([]);
@@ -17,7 +18,11 @@ export default function Dashboard() {
   const [cargandoP, setCargandoP] = useState(true);
 
   useEffect(() => {
-    if (!usuario) return;
+    if (!usuario) {
+      setEventos([]);
+      setCargando(false);
+      return;
+    }
     const q = query(collection(db, 'eventos'), where('creadoPor', '==', usuario.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const lista = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -28,7 +33,11 @@ export default function Dashboard() {
   }, [usuario]);
 
   useEffect(() => {
-    if (!usuario) return;
+    if (!usuario) {
+      setParticipaciones([]);
+      setCargandoP(false);
+      return;
+    }
     const q = query(collection(db, 'participaciones'), where('usuarioId', '==', usuario.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const lista = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -42,16 +51,24 @@ export default function Dashboard() {
     if (Platform.OS === 'web') {
       const confirmar = window.confirm(idioma === 'es' ? '¿Cerrar sesión?' : 'Sign out?');
       if (confirmar) {
-        try { await signOut(auth); router.replace('/(tabs)'); }
-        catch { window.alert('No se pudo cerrar sesión'); }
+        try {
+          await signOut(auth);
+          router.replace('/(tabs)');
+        } catch {
+          window.alert('No se pudo cerrar sesión');
+        }
       }
     } else {
       Alert.alert(t.cerrarSesion, t.cerrarSesionPregunta, [
         { text: t.cancelar, style: 'cancel' },
         {
           text: t.salir, onPress: async () => {
-            try { await signOut(auth); router.replace('/(tabs)'); }
-            catch { Alert.alert(t.error, 'No se pudo cerrar sesión'); }
+            try {
+              await signOut(auth);
+              router.replace('/(tabs)');
+            } catch {
+              Alert.alert(t.error, 'No se pudo cerrar sesión');
+            }
           }
         }
       ]);
@@ -142,7 +159,6 @@ export default function Dashboard() {
           overflowX: 'hidden',
         }}>
 
-          {/* Navbar */}
           <div style={{
             borderBottom: '1px solid rgba(255,255,255,0.06)',
             padding: '0 40px',
@@ -167,10 +183,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Contenido */}
           <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 24px 60px 24px' }}>
 
-            {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
               {[
                 { num: eventos.length, label: idioma === 'es' ? 'Mis eventos' : 'My events', color: '#8B5CF6' },
@@ -188,7 +202,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Botones acción */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 40 }}>
               <button className="btn-accion"
                 onClick={() => router.push('/(tabs)/crear-evento')}
@@ -208,7 +221,6 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Mis eventos */}
             <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.misEventos}</div>
             {cargando
               ? <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
@@ -241,7 +253,6 @@ export default function Dashboard() {
                 ))
             }
 
-            {/* Eventos donde participo */}
             <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, marginTop: 32 }}>
               {t.eventosDondeParticipo}
             </div>
@@ -282,7 +293,6 @@ export default function Dashboard() {
     );
   }
 
-  // ── MÓVIL ─────────────────────────────────────
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
