@@ -73,6 +73,7 @@ export default function Dashboard() {
             border-radius: 16px;
             padding: 20px 24px;
             margin-bottom: 12px;
+            min-height: 110px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -119,10 +120,15 @@ export default function Dashboard() {
           .vacio-box {
             background: rgba(22,27,46,0.8);
             border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 16px; padding: 40px 32px;
-            text-align: center; margin-bottom: 24px;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            border-radius: 16px;
+            padding: 24px 32px;
+            text-align: center;
+            margin-bottom: 24px;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             gap: 8px;
           }
         `}</style>
@@ -208,7 +214,7 @@ export default function Dashboard() {
               : eventos.length === 0
                 ? (
                   <div className="vacio-box">
-                    <div style={{ fontSize: 40 }}>🎉</div>
+                    <div style={{ fontSize: 36 }}>🎉</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6' }}>{t.sinEventos}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.creaEvento}</div>
                   </div>
@@ -243,7 +249,7 @@ export default function Dashboard() {
               : participaciones.length === 0
                 ? (
                   <div className="vacio-box">
-                    <div style={{ fontSize: 40 }}>🔑</div>
+                    <div style={{ fontSize: 36 }}>🔑</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>{t.sinParticipar}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.usaCodigo}</div>
                   </div>
@@ -416,12 +422,12 @@ const styles = StyleSheet.create({
   accionEmoji: { fontSize: 28, marginBottom: 8 },
   accionTexto: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
   seccionTitulo: { fontSize: 18, fontWeight: 'bold', color: '#F8FAFC', marginBottom: 12, marginTop: 4 },
-  vacio: { backgroundColor: '#161B2E', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#2D3343', minHeight: 140, justifyContent: 'center' },
+  vacio: { backgroundColor: '#161B2E', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#2D3343', minHeight: 110, justifyContent: 'center' },
   vacioEmoji: { fontSize: 36, marginBottom: 10 },
   vacioTexto: { fontSize: 15, fontWeight: 'bold', color: '#8B5CF6', marginBottom: 4 },
   vacioSubtexto: { fontSize: 13, color: '#6B7280', textAlign: 'center' },
-  tarjeta: { backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#2D3343', shadowColor: '#8B5CF6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
-  tarjetaDorada: { backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#F59E0B40', shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
+  tarjeta: { backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#2D3343', shadowColor: '#8B5CF6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3, minHeight: 110 },
+  tarjetaDorada: { backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#F59E0B40', shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3, minHeight: 110 },
   tarjetaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   tarjetaNombre: { fontSize: 16, fontWeight: 'bold', color: '#F8FAFC', flex: 1 },
   tarjetaFlecha: { fontSize: 16, color: '#8B5CF6' },
