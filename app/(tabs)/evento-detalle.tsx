@@ -45,16 +45,17 @@ export default function EventoDetalle() {
   };
 
   const handleCompartir = async () => {
+    const link = `https://giftu-app.vercel.app/unirse?codigo=${codigo}`;
     if (Platform.OS === 'web') {
       try {
-        await navigator.clipboard.writeText(`🎁 Evento: "${nombre}"\nCódigo: ${codigo}\ngiftu-app.vercel.app`);
-        window.alert(idioma === 'es' ? '✅ Código copiado al portapapeles' : '✅ Code copied to clipboard');
+        await navigator.clipboard.writeText(`🎁 Evento: "${nombre}"\n${link}`);
+        window.alert(idioma === 'es' ? '✅ Link copiado al portapapeles' : '✅ Link copied to clipboard');
       } catch {
-        window.alert(`Código del evento: ${codigo}`);
+        window.alert(`Link: ${link}`);
       }
     } else {
       try {
-        await Share.share({ message: `🎁 ${t.mensajeCompartir} "${nombre}"\n\n${t.uneteConCodigo} *${codigo}*\n\n${t.descargaApp}` });
+        await Share.share({ message: `🎁 ${t.mensajeCompartir} "${nombre}"\n\n${link}` });
       } catch { Alert.alert(t.error, 'No se pudo compartir'); }
     }
   };
