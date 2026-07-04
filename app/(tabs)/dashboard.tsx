@@ -60,37 +60,46 @@ export default function Dashboard() {
 
   const nombre = usuario?.displayName || usuario?.email?.split('@')[0] || 'Usuario';
 
-  // ── WEB ──────────────────────────────────────
   if (Platform.OS === 'web') {
     return (
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { background: #0a0818; overflow-y: auto; }
+          html, body { background: #0a0818; }
 
           .dash-card {
             background: rgba(22,27,46,0.8);
             border: 1px solid rgba(255,255,255,0.07);
             border-radius: 16px;
-            padding: 18px 20px;
+            padding: 20px 24px;
             margin-bottom: 12px;
-            height: 110px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            gap: 10px;
             transition: border-color 0.2s, background 0.2s;
           }
           .dash-card:hover {
             border-color: rgba(139,92,246,0.35);
             background: rgba(139,92,246,0.06);
           }
-          .dash-card-gold {
-            border-color: rgba(245,158,11,0.2) !important;
-          }
+          .dash-card-gold { border-color: rgba(245,158,11,0.25) !important; }
           .dash-card-gold:hover {
-            border-color: rgba(245,158,11,0.4) !important;
+            border-color: rgba(245,158,11,0.5) !important;
             background: rgba(245,158,11,0.06) !important;
+          }
+          .card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .card-bottom {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(30,37,64,0.9);
+            padding: 10px 14px;
+            border-radius: 10px;
           }
           .btn-accion {
             flex: 1; padding: 20px; border: none; border-radius: 16px;
@@ -110,19 +119,21 @@ export default function Dashboard() {
           .vacio-box {
             background: rgba(22,27,46,0.8);
             border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 16px; padding: 32px; text-align: center;
-            margin-bottom: 32px; height: 110px;
+            border-radius: 16px; padding: 40px 32px;
+            text-align: center; margin-bottom: 24px;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-          }
-          .bloque-inferior {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(30,37,64,0.8);
-            padding: 8px 12px; border-radius: 10px;
+            gap: 8px;
           }
         `}</style>
 
-        <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", backgroundColor: '#0a0818' }}>
+        <div style={{
+          fontFamily: "'Segoe UI', system-ui, sans-serif",
+          backgroundColor: '#0a0818',
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+        }}>
 
           {/* Navbar */}
           <div style={{
@@ -132,7 +143,7 @@ export default function Dashboard() {
             height: 64,
             backgroundColor: 'rgba(10,8,24,0.95)',
             position: 'sticky', top: 0, zIndex: 100,
-            backdropFilter: 'blur(12px)'
+            backdropFilter: 'blur(12px)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 28 }}>🎁</span>
@@ -150,7 +161,7 @@ export default function Dashboard() {
           </div>
 
           {/* Contenido */}
-          <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
+          <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 24px 60px 24px' }}>
 
             {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
@@ -191,14 +202,14 @@ export default function Dashboard() {
             </div>
 
             {/* Mis eventos */}
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.misEventos}</h2>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16 }}>{t.misEventos}</div>
             {cargando
               ? <div style={{ textAlign: 'center' as any, padding: 40, color: '#8B5CF6' }}>Cargando...</div>
               : eventos.length === 0
                 ? (
-                  <div className="vacio-box" style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6', marginBottom: 4 }}>{t.sinEventos}</div>
+                  <div className="vacio-box">
+                    <div style={{ fontSize: 40 }}>🎉</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#8B5CF6' }}>{t.sinEventos}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.creaEvento}</div>
                   </div>
                 )
@@ -208,14 +219,14 @@ export default function Dashboard() {
                       pathname: '/(tabs)/evento-detalle',
                       params: { id: evento.id, nombre: evento.nombre, codigo: evento.codigo }
                     })}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="card-row">
                       <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{evento.nombre}</span>
-                      <span style={{ color: '#8B5CF6' }}>→</span>
+                      <span style={{ color: '#8B5CF6', fontSize: 18 }}>→</span>
                     </div>
                     {evento.fecha && (
                       <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>📅 {evento.fecha}</div>
                     )}
-                    <div className="bloque-inferior">
+                    <div className="card-bottom">
                       <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{t.codigoParaCompartir}:</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: '#F59E0B', letterSpacing: 3 }}>{evento.codigo}</span>
                     </div>
@@ -224,16 +235,16 @@ export default function Dashboard() {
             }
 
             {/* Eventos donde participo */}
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, marginTop: 32 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 16, marginTop: 32 }}>
               {t.eventosDondeParticipo}
-            </h2>
+            </div>
             {cargandoP
               ? <div style={{ textAlign: 'center' as any, padding: 40, color: '#F59E0B' }}>Cargando...</div>
               : participaciones.length === 0
                 ? (
-                  <div className="vacio-box dash-card-gold" style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 36, marginBottom: 8 }}>🔑</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B', marginBottom: 4 }}>{t.sinParticipar}</div>
+                  <div className="vacio-box">
+                    <div style={{ fontSize: 40 }}>🔑</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#F59E0B' }}>{t.sinParticipar}</div>
                     <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{t.usaCodigo}</div>
                   </div>
                 )
@@ -243,13 +254,15 @@ export default function Dashboard() {
                       pathname: '/(tabs)/participante-evento',
                       params: { id: p.eventoId, nombre: p.eventoNombre, codigo: '' }
                     })}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="card-row">
                       <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>{p.eventoNombre}</span>
-                      <span style={{ color: '#F59E0B' }}>→</span>
+                      <span style={{ color: '#F59E0B', fontSize: 18 }}>→</span>
                     </div>
-                    <div style={{ flex: 1 }} />
-                    <div className="bloque-inferior">
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#F59E0B' }}>🎁 {t.participante}</span>
+                    <div className="card-bottom">
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                        {idioma === 'es' ? 'Rol:' : 'Role:'}
+                      </span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#F59E0B' }}>🎁 {t.participante}</span>
                     </div>
                   </div>
                 ))
@@ -351,9 +364,9 @@ export default function Dashboard() {
             ? <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 20 }} />
             : participaciones.length === 0
               ? (
-                <View style={[styles.vacio, styles.vacioDorado]}>
+                <View style={styles.vacio}>
                   <Text style={styles.vacioEmoji}>🔑</Text>
-                  <Text style={[styles.vacioTexto, { color: '#F59E0B' }]}>{t.sinParticipar}</Text>
+                  <Text style={styles.vacioTexto}>{t.sinParticipar}</Text>
                   <Text style={styles.vacioSubtexto}>{t.usaCodigo}</Text>
                 </View>
               )
@@ -367,9 +380,9 @@ export default function Dashboard() {
                     <Text style={styles.tarjetaNombre}>{p.eventoNombre}</Text>
                     <Text style={[styles.tarjetaFlecha, { color: '#F59E0B' }]}>→</Text>
                   </View>
-                  <View style={{ flex: 1 }} />
                   <View style={styles.codigoContainer}>
-                    <Text style={[styles.codigoLabel, { color: '#F59E0B' }]}>🎁 {t.participante}</Text>
+                    <Text style={styles.codigoLabel}>{idioma === 'es' ? 'Rol: ' : 'Role: '}</Text>
+                    <Text style={[styles.codigo, { color: '#F59E0B' }]}>🎁 {t.participante}</Text>
                   </View>
                 </TouchableOpacity>
               ))
@@ -403,36 +416,17 @@ const styles = StyleSheet.create({
   accionEmoji: { fontSize: 28, marginBottom: 8 },
   accionTexto: { color: '#fff', fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
   seccionTitulo: { fontSize: 18, fontWeight: 'bold', color: '#F8FAFC', marginBottom: 12, marginTop: 4 },
-  // Tarjeta base — altura fija para que ambas secciones sean iguales
-  tarjeta: {
-    backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12,
-    borderWidth: 1, borderColor: '#2D3343',
-    shadowColor: '#8B5CF6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3,
-    height: 110, justifyContent: 'space-between',
-  },
-  tarjetaDorada: {
-    backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12,
-    borderWidth: 1, borderColor: '#F59E0B40',
-    shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3,
-    height: 110, justifyContent: 'space-between',
-  },
-  // Vacío con misma altura que las tarjetas
-  vacio: {
-    backgroundColor: '#161B2E', borderRadius: 16, padding: 18, alignItems: 'center', marginBottom: 12,
-    borderWidth: 1, borderColor: '#2D3343',
-    height: 110, justifyContent: 'center',
-  },
-  vacioDorado: {
-    borderColor: '#F59E0B40',
-  },
-  vacioEmoji: { fontSize: 28, marginBottom: 6 },
-  vacioTexto: { fontSize: 14, fontWeight: 'bold', color: '#8B5CF6', marginBottom: 2 },
-  vacioSubtexto: { fontSize: 12, color: '#6B7280', textAlign: 'center' },
-  tarjetaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  vacio: { backgroundColor: '#161B2E', borderRadius: 16, padding: 24, alignItems: 'center', marginBottom: 20, borderWidth: 1, borderColor: '#2D3343', minHeight: 140, justifyContent: 'center' },
+  vacioEmoji: { fontSize: 36, marginBottom: 10 },
+  vacioTexto: { fontSize: 15, fontWeight: 'bold', color: '#8B5CF6', marginBottom: 4 },
+  vacioSubtexto: { fontSize: 13, color: '#6B7280', textAlign: 'center' },
+  tarjeta: { backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#2D3343', shadowColor: '#8B5CF6', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
+  tarjetaDorada: { backgroundColor: '#161B2E', borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#F59E0B40', shadowColor: '#F59E0B', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 3 },
+  tarjetaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   tarjetaNombre: { fontSize: 16, fontWeight: 'bold', color: '#F8FAFC', flex: 1 },
   tarjetaFlecha: { fontSize: 16, color: '#8B5CF6' },
-  tarjetaFecha: { fontSize: 13, color: '#6B7280' },
-  codigoContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E2540', padding: 10, borderRadius: 10 },
+  tarjetaFecha: { fontSize: 13, color: '#6B7280', marginBottom: 8 },
+  codigoContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E2540', padding: 10, borderRadius: 10, marginTop: 4 },
   codigoLabel: { fontSize: 12, color: '#6B7280' },
   codigo: { fontSize: 14, fontWeight: 'bold', color: '#F59E0B', letterSpacing: 3 },
 });
