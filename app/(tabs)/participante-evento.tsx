@@ -2,17 +2,18 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useIdioma } from '../../app/IdiomaContext';
-import { auth, db } from '../../firebaseConfig';
+import { db } from '../../firebaseConfig';
+import { useAuth } from '../AuthContext';
+import { useIdioma } from '../IdiomaContext';
 
 export default function ParticipanteEvento() {
   const router = useRouter();
   const { id, nombre } = useLocalSearchParams();
   const { t, idioma } = useIdioma();
+  const { usuario } = useAuth();
   const [regalos, setRegalos] = useState([]);
   const [misApartados, setMisApartados] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const usuario = auth.currentUser;
 
   useEffect(() => {
     const q = query(collection(db, 'eventos', id as string, 'regalos'));
@@ -25,13 +26,17 @@ export default function ParticipanteEvento() {
   }, [id]);
 
   useEffect(() => {
-    const q = query(collection(db, 'apartados_privados'), where('usuarioId', '==', usuario?.uid), where('eventoId', '==', id));
+    if (!usuario) {
+      setMisApartados([]);
+      return;
+    }
+    const q = query(collection(db, 'apartados_privados'), where('usuarioId', '==', usuario.uid), where('eventoId', '==', id));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const lista = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMisApartados(lista);
     });
     return () => unsubscribe();
-  }, [id]);
+  }, [id, usuario]);
 
   const mostrarAlerta = (titulo: string, mensaje: string) => {
     if (Platform.OS === 'web') {
@@ -42,6 +47,7 @@ export default function ParticipanteEvento() {
   };
 
   const handleApartar = async (regalo: any) => {
+    if (!usuario) { mostrarAlerta(t.error, idioma === 'es' ? 'Debes iniciar sesión' : 'You must be signed in'); return; }
     if (regalo.estado === 'apartado') { mostrarAlerta(t.error, t.noDisponible); return; }
     const confirmar = Platform.OS === 'web'
       ? window.confirm(`${t.quieresApartar} "${regalo.nombre}"?`)
@@ -49,7 +55,7 @@ export default function ParticipanteEvento() {
     if (!confirmar) return;
     try {
       await updateDoc(doc(db, 'eventos', id as string, 'regalos', regalo.id), { estado: 'apartado' });
-      await addDoc(collection(db, 'apartados_privados'), { usuarioId: usuario?.uid, usuarioEmail: usuario?.email, eventoId: id, regaloId: regalo.id, regaloNombre: regalo.nombre, fechaApartado: new Date(), cancelado: false });
+      await addDoc(collection(db, 'apartados_privados'), { usuarioId: usuario.uid, usuarioEmail: usuario.email, eventoId: id, regaloId: regalo.id, regaloNombre: regalo.nombre, fechaApartado: new Date(), cancelado: false });
       mostrarAlerta('🎉', t.apartadoExito);
     } catch { mostrarAlerta(t.error, t.errorApartar); }
   };
@@ -75,7 +81,7 @@ export default function ParticipanteEvento() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { background: #0a0818; margin: 0; padding: 0; }
+          html, body { background: #0a0818; }
           .regalo-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px; margin-bottom: 12px; transition: all 0.2s; cursor: pointer; }
           .regalo-card:hover { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.06); transform: translateY(-1px); }
           .regalo-card-yo { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); }
@@ -87,8 +93,13 @@ export default function ParticipanteEvento() {
           .btn-regresar:hover { background: rgba(139,92,246,0.1); }
         `}</style>
 
-        {/* Página completa con fondo oscuro */}
-        <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+        <div style={{
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          backgroundColor: '#0a0818',
+          fontFamily: "'Segoe UI', system-ui, sans-serif",
+        }}>
 
           {/* Navbar */}
           <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>

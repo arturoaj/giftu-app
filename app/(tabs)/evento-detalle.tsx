@@ -5,8 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, Share, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useIdioma } from '../../app/IdiomaContext';
 import { db } from '../../firebaseConfig';
+import { useIdioma } from '../IdiomaContext';
 
 export default function EventoDetalle() {
   const router = useRouter();
@@ -130,7 +130,7 @@ export default function EventoDetalle() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { background: #0a0818; min-height: 100%; }
+          html, body { background: #0a0818; }
           .web-card { background: rgba(22,27,46,0.8); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 20px 24px; margin-bottom: 12px; transition: border-color 0.2s; }
           .web-card:hover { border-color: rgba(139,92,246,0.2); }
           .web-input { width: 100%; background: rgba(30,37,64,0.9); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #F8FAFC; outline: none; font-family: inherit; margin-bottom: 12px; transition: border-color 0.2s; }
@@ -152,17 +152,23 @@ export default function EventoDetalle() {
           .progreso-relleno { height: 8px; background: linear-gradient(90deg, #8B5CF6, #F59E0B); border-radius: 4px; }
         `}</style>
 
-        {/* Navbar */}
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 24 }}>🎁</span>
-            <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Giftu</span>
+        <div style={{
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          backgroundColor: '#0a0818',
+          fontFamily: "'Segoe UI', system-ui, sans-serif",
+        }}>
+          {/* Navbar */}
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(12px)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 24 }}>🎁</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>Giftu</span>
+            </div>
+            <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
           </div>
-          <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>← {t.regresar}</button>
-        </div>
 
-        {/* Contenido */}
-        <div style={{ backgroundColor: '#0a0818', minHeight: 'calc(100vh - 64px)', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+          {/* Contenido */}
           <div style={{ maxWidth: 800, margin: '0 auto', padding: '32px 40px' }}>
 
             <h1 style={{ fontSize: 28, fontWeight: 800, color: '#fff', marginBottom: 20 }}>{nombre}</h1>

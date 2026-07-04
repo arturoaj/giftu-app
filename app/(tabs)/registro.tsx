@@ -4,8 +4,8 @@ import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } 
 import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useIdioma } from '../../app/IdiomaContext';
 import { auth, db } from '../../firebaseConfig';
+import { useIdioma } from '../IdiomaContext';
 
 export default function Registro() {
   const [nombre, setNombre] = useState('');
@@ -85,7 +85,7 @@ export default function Registro() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { height: 100%; background: #0a0818; }
+          html, body { background: #0a0818; }
           .reg-input {
             width: 100%;
             background: rgba(22,27,46,0.95);
@@ -149,7 +149,9 @@ export default function Registro() {
         `}</style>
 
         <div style={{
-          minHeight: '100vh',
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           backgroundColor: '#0a0818',
           display: 'flex',
           alignItems: 'center',
@@ -157,7 +159,6 @@ export default function Registro() {
           fontFamily: "'Segoe UI', system-ui, sans-serif",
           padding: '40px 20px',
           position: 'relative',
-          overflow: 'hidden',
         }}>
           {/* Glows */}
           <div style={{ position: 'fixed', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(120,40,220,0.2) 0%, transparent 70%)', top: -150, left: -100, pointerEvents: 'none' }} />

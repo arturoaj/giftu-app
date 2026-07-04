@@ -1,34 +1,25 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { GoogleAuthProvider, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useIdioma } from '../../app/IdiomaContext';
+import { Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../firebaseConfig';
-
-const { width } = Dimensions.get('window');
-const isTablet = width >= 768;
+import { useAuth } from '../AuthContext';
+import { useIdioma } from '../IdiomaContext';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [cargando, setCargando] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { usuario } = useAuth();
   const { t, idioma, cambiarIdioma } = useIdioma();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (usuario) => {
-      if (usuario) {
-        router.replace('/(tabs)/dashboard');
-      } else {
-        setEmail('');
-        setPassword('');
-        setCargando(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+    if (usuario) {
+      router.replace('/(tabs)/dashboard');
+    }
+  }, [usuario]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -88,21 +79,12 @@ export default function Login() {
     }
   };
 
-  if (cargando) {
-    return (
-      <View style={styles.cargando}>
-        <Text style={styles.logoTexto}>🎁 Giftu</Text>
-        <ActivityIndicator size="large" color="#F59E0B" style={{ marginTop: 20 }} />
-      </View>
-    );
-  }
-
   if (Platform.OS === 'web') {
     return (
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { height: 100%; background: #0a0818; }
+          html, body { background: #0a0818; }
           .input-outer {
             background: rgba(22,27,46,0.95);
             border: 1px solid rgba(255,255,255,0.08);
@@ -194,7 +176,14 @@ export default function Login() {
           }
         `}</style>
 
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#0a0818', fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+        <div style={{
+          display: 'flex',
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          backgroundColor: '#0a0818',
+          fontFamily: "'Segoe UI', system-ui, sans-serif",
+        }}>
           {/* Columna izquierda - oculta en móvil */}
           <div className="left-col" style={{
             width: '45%', background: 'linear-gradient(160deg, #1e0a3c 0%, #130820 60%, #0a0818 100%)',
@@ -349,7 +338,6 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  cargando: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0D0D0D' },
   container: { flex: 1, backgroundColor: '#0D0D0D' },
   header: { paddingTop: 80, paddingBottom: 24, paddingHorizontal: 24 },
   selectorIdioma: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 28, gap: 8 },

@@ -3,8 +3,9 @@ import { useRouter } from 'expo-router';
 import { addDoc, collection } from 'firebase/firestore';
 import { useState } from 'react';
 import { Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useIdioma } from '../../app/IdiomaContext';
-import { auth, db } from '../../firebaseConfig';
+import { db } from '../../firebaseConfig';
+import { useAuth } from '../AuthContext';
+import { useIdioma } from '../IdiomaContext';
 
 function generarCodigo() {
   const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -21,6 +22,7 @@ export default function CrearEvento() {
   const [fecha, setFecha] = useState('');
   const [cargando, setCargando] = useState(false);
   const router = useRouter();
+  const { usuario } = useAuth();
   const { t, idioma } = useIdioma();
 
   const mostrarAlerta = (titulo: string, mensaje: string, onOk?: () => void) => {
@@ -37,17 +39,20 @@ export default function CrearEvento() {
       mostrarAlerta(t.error, t.nombreObligatorio);
       return;
     }
+    if (!usuario) {
+      mostrarAlerta(t.error, idioma === 'es' ? 'Debes iniciar sesión' : 'You must be signed in');
+      return;
+    }
     setCargando(true);
     try {
       const codigo = generarCodigo();
-      const usuario = auth.currentUser;
       await addDoc(collection(db, 'eventos'), {
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         fecha: fecha.trim(),
         codigo,
-        creadoPor: usuario?.uid,
-        creadoPorEmail: usuario?.email,
+        creadoPor: usuario.uid,
+        creadoPorEmail: usuario.email,
         estado: 'activo',
         creadoEn: new Date(),
       });
@@ -64,7 +69,7 @@ export default function CrearEvento() {
       <>
         <style>{`
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { height: 100%; background: #0a0818; }
+          html, body { background: #0a0818; }
           .web-input {
             width: 100%;
             background: rgba(22,27,46,0.95);
@@ -143,45 +148,52 @@ export default function CrearEvento() {
           .btn-regresar:hover { background: rgba(139,92,246,0.1); }
         `}</style>
 
-        {/* Navbar */}
         <div style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px',
-          display: 'flex', alignItems: 'center', height: 64,
-          backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100,
-          backdropFilter: 'blur(12px)', fontFamily: "'Segoe UI', system-ui, sans-serif",
-        }}>
-          <span style={{ fontSize: 24 }}>🎁</span>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginLeft: 10 }}>Giftu</span>
-        </div>
-
-        <div style={{
-          minHeight: '100vh', backgroundColor: '#0a0818', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', padding: '40px 20px',
+          height: '100vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          backgroundColor: '#0a0818',
           fontFamily: "'Segoe UI', system-ui, sans-serif",
         }}>
-          <div style={{ width: '100%', maxWidth: 520 }}>
-            <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>
-              ← {t.regresar}
-            </button>
+          {/* Navbar */}
+          <div style={{
+            borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 40px',
+            display: 'flex', alignItems: 'center', height: 64,
+            backgroundColor: 'rgba(10,8,24,0.95)', position: 'sticky', top: 0, zIndex: 100,
+            backdropFilter: 'blur(12px)',
+          }}>
+            <span style={{ fontSize: 24 }}>🎁</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', marginLeft: 10 }}>Giftu</span>
+          </div>
 
-            <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.5px' }}>{t.nuevoEvento}</h1>
-            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 36 }}>
-              {idioma === 'es' ? 'Completa los detalles de tu evento' : 'Fill in the details of your event'}
-            </p>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '40px 20px',
+          }}>
+            <div style={{ width: '100%', maxWidth: 520 }}>
+              <button className="btn-regresar" onClick={() => router.replace('/(tabs)/dashboard')}>
+                ← {t.regresar}
+              </button>
 
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.nombreEvento}</label>
-            <input className="web-input" type="text" placeholder={t.ejNombre} value={nombre} onChange={(e: any) => setNombre(e.target.value)} />
+              <h1 style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.5px' }}>{t.nuevoEvento}</h1>
+              <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 36 }}>
+                {idioma === 'es' ? 'Completa los detalles de tu evento' : 'Fill in the details of your event'}
+              </p>
 
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.descripcion}</label>
-            <textarea className="web-textarea" placeholder={t.ejDescripcion} value={descripcion} onChange={(e: any) => setDescripcion(e.target.value)} />
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.nombreEvento}</label>
+              <input className="web-input" type="text" placeholder={t.ejNombre} value={nombre} onChange={(e: any) => setNombre(e.target.value)} />
 
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.fecha} 📅</label>
-            <input className="web-input" type="text" placeholder={t.ejFecha} value={fecha} onChange={(e: any) => setFecha(e.target.value)} />
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.descripcion}</label>
+              <textarea className="web-textarea" placeholder={t.ejDescripcion} value={descripcion} onChange={(e: any) => setDescripcion(e.target.value)} />
 
-            <button className="btn-crear" onClick={handleCrear} disabled={cargando}>
-              {cargando ? (idioma === 'es' ? 'Creando...' : 'Creating...') : `✨ ${t.crearEventoBtn}`}
-            </button>
-            <button className="btn-cancelar" onClick={() => router.replace('/(tabs)/dashboard')}>{t.cancelar}</button>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>{t.fecha} 📅</label>
+              <input className="web-input" type="text" placeholder={t.ejFecha} value={fecha} onChange={(e: any) => setFecha(e.target.value)} />
+
+              <button className="btn-crear" onClick={handleCrear} disabled={cargando}>
+                {cargando ? (idioma === 'es' ? 'Creando...' : 'Creating...') : `✨ ${t.crearEventoBtn}`}
+              </button>
+              <button className="btn-cancelar" onClick={() => router.replace('/(tabs)/dashboard')}>{t.cancelar}</button>
+            </div>
           </div>
         </div>
       </>
