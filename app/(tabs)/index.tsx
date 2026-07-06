@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { GoogleAuthProvider, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -12,14 +12,24 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const codigoPendiente = typeof params.codigo === 'string' ? params.codigo : undefined;
   const { usuario } = useAuth();
   const { t, idioma, cambiarIdioma } = useIdioma();
 
   useEffect(() => {
     if (usuario) {
-      router.replace('/(tabs)/dashboard');
+      if (codigoPendiente) {
+        router.replace({ pathname: '/(tabs)/unirse', params: { codigo: codigoPendiente } });
+      } else {
+        router.replace('/(tabs)/dashboard');
+      }
     }
   }, [usuario]);
+
+  const irARegistro = () => {
+    router.push(codigoPendiente ? { pathname: '/(tabs)/registro', params: { codigo: codigoPendiente } } : '/(tabs)/registro');
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -233,6 +243,19 @@ export default function Login() {
                 ))}
               </div>
 
+              {codigoPendiente && (
+                <div style={{
+                  background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)',
+                  borderRadius: 12, padding: '12px 16px', marginBottom: 24, textAlign: 'center' as any
+                }}>
+                  <p style={{ fontSize: 13, color: '#A855F7', fontWeight: 600 }}>
+                    {idioma === 'es'
+                      ? `🎁 Inicia sesión para unirte al evento con el código ${codigoPendiente}`
+                      : `🎁 Sign in to join the event with code ${codigoPendiente}`}
+                  </p>
+                </div>
+              )}
+
               <h2 style={{ fontSize: 34, fontWeight: 800, color: '#fff', marginBottom: 8, letterSpacing: '-0.5px' }}>
                 {idioma === 'es' ? 'Bienvenido de nuevo' : 'Welcome back'}
               </h2>
@@ -278,7 +301,7 @@ export default function Login() {
 
               <p style={{ textAlign: 'center' as any, fontSize: 14, color: 'rgba(255,255,255,0.35)', marginTop: 32 }}>
                 {idioma === 'es' ? '¿No tienes cuenta? ' : "Don't have an account? "}
-                <a className="link-purple" onClick={() => router.push('/(tabs)/registro')} style={{ fontSize: 14 }}>
+                <a className="link-purple" onClick={irARegistro} style={{ fontSize: 14 }}>
                   {idioma === 'es' ? 'Regístrate' : 'Sign up'}
                 </a>
               </p>
@@ -306,6 +329,15 @@ export default function Login() {
           <Text style={styles.logoTexto}>Giftu</Text>
         </View>
         <Text style={styles.tagline}>{idioma === 'es' ? '✨ Regala sin spoilers' : '✨ Gift without spoilers'}</Text>
+        {codigoPendiente && (
+          <View style={styles.avisoCodigo}>
+            <Text style={styles.avisoCodigoTexto}>
+              {idioma === 'es'
+                ? `🎁 Inicia sesión para unirte al evento con el código ${codigoPendiente}`
+                : `🎁 Sign in to join the event with code ${codigoPendiente}`}
+            </Text>
+          </View>
+        )}
       </View>
       <View style={styles.formulario}>
         <View style={styles.inputContainer}>
@@ -329,7 +361,7 @@ export default function Login() {
           <Text style={styles.separadorTexto}>{idioma === 'es' ? '¿nuevo en Giftu?' : 'new to Giftu?'}</Text>
           <View style={styles.separadorLinea} />
         </View>
-        <TouchableOpacity style={styles.botonRegistro} onPress={() => router.push('/(tabs)/registro')}>
+        <TouchableOpacity style={styles.botonRegistro} onPress={irARegistro}>
           <Text style={styles.botonRegistroTexto}>{t.noTieneCuenta}</Text>
         </TouchableOpacity>
       </View>
@@ -349,6 +381,8 @@ const styles = StyleSheet.create({
   logoEmoji: { fontSize: 38 },
   logoTexto: { fontSize: 42, fontWeight: 'bold', color: '#F8FAFC' },
   tagline: { fontSize: 15, color: '#94A3B8', textAlign: 'center', marginTop: 4, marginBottom: 8 },
+  avisoCodigo: { backgroundColor: '#8B5CF61A', borderWidth: 1, borderColor: '#8B5CF64D', borderRadius: 12, padding: 14, marginTop: 16 },
+  avisoCodigoTexto: { fontSize: 13, color: '#A855F7', fontWeight: '600', textAlign: 'center' },
   formulario: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
   inputContainer: { marginBottom: 16 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', marginBottom: 8 },
