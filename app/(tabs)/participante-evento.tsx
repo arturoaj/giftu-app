@@ -60,18 +60,28 @@ export default function ParticipanteEvento() {
         return;
       }
 
-      // Solo para celular: evita que quede una pestaña en about:blank
-      const nuevaVentana = window.open('', '_blank');
-      if (!nuevaVentana) { window.location.href = url; return; }
-      nuevaVentana.location.replace(url);
+      // Móvil: abrimos la pestaña nueva normalmente
+      const nuevaVentana = window.open(url, '_blank');
+      if (!nuevaVentana) return;
 
+      // Si el sistema abre la app nativa (Amazon, etc.), el navegador completo
+      // pasa a segundo plano y el documento de Giftu se marca como "hidden".
+      // Aprovechamos esa señal para cerrar automáticamente la pestaña en blanco
+      // que quedó huérfana detrás.
+      const cerrarSiSeFueLaApp = () => {
+        if (document.hidden) {
+          try { nuevaVentana.close(); } catch (e) {}
+          document.removeEventListener('visibilitychange', cerrarSiSeFueLaApp);
+        }
+      };
+
+      document.addEventListener('visibilitychange', cerrarSiSeFueLaApp);
+
+      // Dejamos de escuchar después de unos segundos para no interferir
+      // si el usuario cambia de app por otra razón más adelante.
       setTimeout(() => {
-        try {
-          if (nuevaVentana.location.href === 'about:blank') {
-            nuevaVentana.close();
-          }
-        } catch (e) {}
-      }, 1200);
+        document.removeEventListener('visibilitychange', cerrarSiSeFueLaApp);
+      }, 3000);
     } else {
       Linking.openURL(url);
     }
