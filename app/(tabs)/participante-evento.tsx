@@ -48,10 +48,33 @@ export default function ParticipanteEvento() {
     }
   };
 
-  const handleAbrirLink = async (link: string) => {
+  const handleAbrirLink = (link: string) => {
     if (!link) return;
     const url = link.startsWith('http') ? link : `https://${link}`;
-    if (Platform.OS === 'web') { window.open(url, '_blank'); } else { await Linking.openURL(url); }
+
+    if (Platform.OS === 'web') {
+      const esMovil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if (!esMovil) {
+        window.open(url, '_blank'); // PC: sin cambios
+        return;
+      }
+
+      // Solo para celular: evita que quede una pestaña en about:blank
+      const nuevaVentana = window.open('', '_blank');
+      if (!nuevaVentana) { window.location.href = url; return; }
+      nuevaVentana.location.replace(url);
+
+      setTimeout(() => {
+        try {
+          if (nuevaVentana.location.href === 'about:blank') {
+            nuevaVentana.close();
+          }
+        } catch (e) {}
+      }, 1200);
+    } else {
+      Linking.openURL(url);
+    }
   };
 
   const handleApartar = async (regalo: any) => {
@@ -89,7 +112,6 @@ export default function ParticipanteEvento() {
   const abrirDetalle = (regalo: any) => setRegaloDetalle(regalo);
   const cerrarDetalle = () => setRegaloDetalle(null);
 
-  // Datos del detalle actualmente abierto (se recalculan por si cambió el estado en vivo)
   const detalleActual = regaloDetalle ? regalos.find((r: any) => r.id === regaloDetalle.id) || regaloDetalle : null;
   const detalleYoAparte = detalleActual ? misApartadosIds.includes(detalleActual.id) : false;
   const detalleDisponible = detalleActual ? detalleActual.estado !== 'apartado' : false;
