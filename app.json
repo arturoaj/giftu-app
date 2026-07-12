@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "regalo-app",
+    "name": "Giftu",
     "slug": "regalo-app",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "regaloapp",
@@ -13,14 +13,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0a0818",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.giftu.app"
+      "package": "com.giftu.app",
+      "versionCode": 2
     },
     "web": {
       "output": "static",
@@ -34,9 +34,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#0a0818",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#0a0818"
           }
         }
       ],

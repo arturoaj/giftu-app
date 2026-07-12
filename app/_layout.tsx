@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { AuthProvider } from './AuthContext';
 import { IdiomaProvider } from './IdiomaContext';
+import VerificadorActualizacion from './VerificadorActualizacion';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -22,6 +23,7 @@ export default function RootLayout() {
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
           <StatusBar style="auto" />
+          <VerificadorActualizacion />
         </ThemeProvider>
       </IdiomaProvider>
     </AuthProvider>
