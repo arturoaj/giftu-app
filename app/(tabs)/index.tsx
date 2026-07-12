@@ -1,10 +1,11 @@
 import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { doc, getDoc } from 'firebase/firestore';
 import { GoogleAuthProvider, sendPasswordResetEmail, signInWithCredential, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { auth } from '../../firebaseConfig';
+import { auth, db } from '../../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { useIdioma } from '../IdiomaContext';
 import { registroEstado } from '../registroEstado';
@@ -25,6 +26,22 @@ export default function Login() {
   const codigoPendiente = typeof params.codigo === 'string' ? params.codigo : undefined;
   const { usuario } = useAuth();
   const { t, idioma, cambiarIdioma } = useIdioma();
+  const [apkUrl, setApkUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'config', 'version_app'));
+        if (snap.exists()) {
+          const url = snap.data().urlApk;
+          if (url) setApkUrl(url);
+        }
+      } catch {
+        // Si falla, simplemente no mostramos el botón de descarga
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     // Si el registro sigue guardando datos del usuario nuevo, no lo interrumpimos
@@ -225,6 +242,25 @@ export default function Login() {
             transition: background 0.2s;
           }
           .feature-card:hover { background: rgba(139,92,246,0.08); }
+          .btn-descargar-android {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            background: rgba(61,220,132,0.08);
+            border: 1px solid rgba(61,220,132,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #3DDC84;
+            font-family: inherit;
+            transition: background 0.2s, transform 0.2s;
+          }
+          .btn-descargar-android:hover { background: rgba(61,220,132,0.15); transform: translateY(-1px); }
           .sep-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
           .link-purple { color: #a855f7; cursor: pointer; font-weight: 700; text-decoration: none; }
           .link-purple:hover { text-decoration: underline; }
@@ -363,6 +399,16 @@ export default function Login() {
                   {idioma === 'es' ? 'Regístrate' : 'Sign up'}
                 </a>
               </p>
+
+              {apkUrl && (
+                <button
+                  className="btn-descargar-android"
+                  onClick={() => window.open(apkUrl, '_blank')}
+                >
+                  <span style={{ fontSize: 20 }}>🤖</span>
+                  <span>{idioma === 'es' ? 'Descargar en Android' : 'Download for Android'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
