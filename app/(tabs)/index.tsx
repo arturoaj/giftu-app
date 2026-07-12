@@ -1,14 +1,20 @@
+import Constants from 'expo-constants';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { GoogleAuthProvider, sendPasswordResetEmail, signInWithCredential, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { useIdioma } from '../IdiomaContext';
+import { registroEstado } from '../registroEstado';
 
 // El "Web client ID" viene de: Firebase Console → Authentication → Sign-in method → Google → Configuración del SDK web
 const GOOGLE_WEB_CLIENT_ID = '1022923587611-o7ak61h72n0g0e3u4qnhunhkhlqmn51o.apps.googleusercontent.com';
+
+// Expo Go no trae el módulo nativo de Google Sign-In compilado, así que lo detectamos
+// para no intentar usarlo ahí (solo funciona en un development build o en el APK real).
+const esExpoGo = Constants.appOwnership === 'expo' || Constants.executionEnvironment === 'storeClient';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -21,6 +27,10 @@ export default function Login() {
   const { t, idioma, cambiarIdioma } = useIdioma();
 
   useEffect(() => {
+    // Si el registro sigue guardando datos del usuario nuevo, no lo interrumpimos
+    // redirigiendo antes de tiempo — la propia pantalla de registro navega cuando termine.
+    if (registroEstado.enProceso) return;
+
     if (usuario) {
       if (codigoPendiente) {
         router.replace({ pathname: '/(tabs)/unirse', params: { codigo: codigoPendiente } });
@@ -32,7 +42,7 @@ export default function Login() {
 
   // Configura el Google Sign-In nativo una sola vez, solo en Android/iOS (nunca en web)
   useEffect(() => {
-    if (Platform.OS === 'web') return;
+    if (Platform.OS === 'web' || esExpoGo) return;
     (async () => {
       const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
       GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
@@ -101,6 +111,16 @@ export default function Login() {
     }
 
     // Versión nativa (Android/iOS)
+    if (esExpoGo) {
+      Alert.alert(
+        'Expo Go',
+        idioma === 'es'
+          ? 'El login con Google no funciona dentro de Expo Go. Pruébalo en el APK instalado o en un development build.'
+          : 'Google sign-in does not work inside Expo Go. Test it on the installed APK or a development build.'
+      );
+      return;
+    }
+
     try {
       const { GoogleSignin, isErrorWithCode, statusCodes } = await import('@react-native-google-signin/google-signin');
 
@@ -353,99 +373,107 @@ export default function Login() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0D0D0D" />
-      <View style={styles.header}>
-        <View style={styles.selectorIdioma}>
-          <TouchableOpacity style={[styles.btnIdioma, idioma === 'es' && styles.btnIdiomaActivo]} onPress={() => cambiarIdioma('es')}>
-            <Text style={[styles.btnIdiomaTexto, idioma === 'es' && styles.btnIdiomaTextoActivo]}>🇲🇽 ES</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.btnIdioma, idioma === 'en' && styles.btnIdiomaActivo]} onPress={() => cambiarIdioma('en')}>
-            <Text style={[styles.btnIdiomaTexto, idioma === 'en' && styles.btnIdiomaTextoActivo]}>🇺🇸 EN</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoEmoji}>🎁</Text>
-          <Text style={styles.logoTexto}>Giftu</Text>
-        </View>
-        <Text style={styles.tagline}>{idioma === 'es' ? '✨ Regala sin spoilers' : '✨ Gift without spoilers'}</Text>
-        {codigoPendiente && (
-          <View style={styles.avisoCodigo}>
-            <Text style={styles.avisoCodigoTexto}>
-              {idioma === 'es'
-                ? `🎁 Inicia sesión para unirte al evento con el código ${codigoPendiente}`
-                : `🎁 Sign in to join the event with code ${codigoPendiente}`}
-            </Text>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View style={styles.selectorIdioma}>
+            <TouchableOpacity style={[styles.btnIdioma, idioma === 'es' && styles.btnIdiomaActivo]} onPress={() => cambiarIdioma('es')}>
+              <Text style={[styles.btnIdiomaTexto, idioma === 'es' && styles.btnIdiomaTextoActivo]}>🇲🇽 ES</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.btnIdioma, idioma === 'en' && styles.btnIdiomaActivo]} onPress={() => cambiarIdioma('en')}>
+              <Text style={[styles.btnIdiomaTexto, idioma === 'en' && styles.btnIdiomaTextoActivo]}>🇺🇸 EN</Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </View>
-      <View style={styles.formulario}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>{t.correo}</Text>
-          <TextInput style={styles.input} placeholder="ejemplo@correo.com" placeholderTextColor="#4B5563" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoEmoji}>🎁</Text>
+            <Text style={styles.logoTexto}>Giftu</Text>
+          </View>
+          <Text style={styles.tagline}>{idioma === 'es' ? '✨ Regala sin spoilers' : '✨ Gift without spoilers'}</Text>
+          {codigoPendiente && (
+            <View style={styles.avisoCodigo}>
+              <Text style={styles.avisoCodigoTexto}>
+                {idioma === 'es'
+                  ? `🎁 Inicia sesión para unirte al evento con el código ${codigoPendiente}`
+                  : `🎁 Sign in to join the event with code ${codigoPendiente}`}
+              </Text>
+            </View>
+          )}
         </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.inputLabel}>{t.contrasena}</Text>
-          <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#4B5563" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
-        </View>
-        <TouchableOpacity onPress={handleOlvideContrasena} style={{ alignSelf: 'flex-end', marginBottom: 16 }}>
-          <Text style={{ color: '#8B5CF6', fontSize: 13 }}>{idioma === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.boton} onPress={handleLogin}>
-          <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.botonGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-            <Text style={styles.botonTexto}>{t.entrar}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        <View style={styles.formulario}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.correo}</Text>
+            <TextInput style={styles.input} placeholder="ejemplo@correo.com" placeholderTextColor="#4B5563" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>{t.contrasena}</Text>
+            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#4B5563" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
+          </View>
+          <TouchableOpacity onPress={handleOlvideContrasena} style={{ alignSelf: 'flex-end', marginBottom: 14 }}>
+            <Text style={{ color: '#8B5CF6', fontSize: 13 }}>{idioma === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot your password?'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.boton} onPress={handleLogin}>
+            <LinearGradient colors={['#8B5CF6', '#A855F7']} style={styles.botonGradiente} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <Text style={styles.botonTexto}>{t.entrar}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-        <View style={styles.separador}>
-          <View style={styles.separadorLinea} />
-          <Text style={styles.separadorTexto}>{idioma === 'es' ? 'o continúa con' : 'or continue with'}</Text>
-          <View style={styles.separadorLinea} />
-        </View>
+          <View style={styles.separador}>
+            <View style={styles.separadorLinea} />
+            <Text style={styles.separadorTexto}>{idioma === 'es' ? 'o continúa con' : 'or continue with'}</Text>
+            <View style={styles.separadorLinea} />
+          </View>
 
-        <TouchableOpacity style={styles.botonGoogle} onPress={handleGoogleLogin}>
-          <Text style={styles.googleG}>G</Text>
-          <Text style={styles.botonGoogleTexto}>{idioma === 'es' ? 'Continuar con Google' : 'Continue with Google'}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.botonGoogle} onPress={handleGoogleLogin}>
+            <Text style={styles.googleG}>G</Text>
+            <Text style={styles.botonGoogleTexto}>{idioma === 'es' ? 'Continuar con Google' : 'Continue with Google'}</Text>
+          </TouchableOpacity>
 
-        <View style={styles.separador}>
-          <View style={styles.separadorLinea} />
-          <Text style={styles.separadorTexto}>{idioma === 'es' ? '¿nuevo en Giftu?' : 'new to Giftu?'}</Text>
-          <View style={styles.separadorLinea} />
+          <View style={styles.separador}>
+            <View style={styles.separadorLinea} />
+            <Text style={styles.separadorTexto}>{idioma === 'es' ? '¿nuevo en Giftu?' : 'new to Giftu?'}</Text>
+            <View style={styles.separadorLinea} />
+          </View>
+          <TouchableOpacity style={styles.botonRegistro} onPress={irARegistro}>
+            <Text style={styles.botonRegistroTexto}>{t.noTieneCuenta}</Text>
+          </TouchableOpacity>
+
+          <View style={{ height: 24 }} />
         </View>
-        <TouchableOpacity style={styles.botonRegistro} onPress={irARegistro}>
-          <Text style={styles.botonRegistroTexto}>{t.noTieneCuenta}</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0D0D0D' },
-  header: { paddingTop: 80, paddingBottom: 24, paddingHorizontal: 24 },
-  selectorIdioma: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 28, gap: 8 },
+  header: { paddingTop: 50, paddingBottom: 16, paddingHorizontal: 24 },
+  selectorIdioma: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16, gap: 8 },
   btnIdioma: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#2D3343' },
   btnIdiomaActivo: { backgroundColor: '#161B2E', borderColor: '#8B5CF6' },
   btnIdiomaTexto: { fontSize: 13, color: '#6B7280', fontWeight: '600' },
   btnIdiomaTextoActivo: { color: '#8B5CF6' },
-  logoContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8, gap: 10 },
-  logoEmoji: { fontSize: 38 },
-  logoTexto: { fontSize: 42, fontWeight: 'bold', color: '#F8FAFC' },
-  tagline: { fontSize: 15, color: '#94A3B8', textAlign: 'center', marginTop: 4, marginBottom: 8 },
-  avisoCodigo: { backgroundColor: '#8B5CF61A', borderWidth: 1, borderColor: '#8B5CF64D', borderRadius: 12, padding: 14, marginTop: 16 },
+  logoContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 4, gap: 10 },
+  logoEmoji: { fontSize: 32 },
+  logoTexto: { fontSize: 34, fontWeight: 'bold', color: '#F8FAFC' },
+  tagline: { fontSize: 14, color: '#94A3B8', textAlign: 'center', marginTop: 2, marginBottom: 4 },
+  avisoCodigo: { backgroundColor: '#8B5CF61A', borderWidth: 1, borderColor: '#8B5CF64D', borderRadius: 12, padding: 12, marginTop: 12 },
   avisoCodigoTexto: { fontSize: 13, color: '#A855F7', fontWeight: '600', textAlign: 'center' },
-  formulario: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
-  inputContainer: { marginBottom: 16 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', marginBottom: 8 },
-  input: { backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 16, fontSize: 16, color: '#F8FAFC' },
-  boton: { borderRadius: 14, overflow: 'hidden', marginTop: 8, marginBottom: 8 },
-  botonGradiente: { padding: 18, alignItems: 'center' },
+  formulario: { paddingHorizontal: 24, paddingTop: 8 },
+  inputContainer: { marginBottom: 14 },
+  inputLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', marginBottom: 6 },
+  input: { backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 14, fontSize: 16, color: '#F8FAFC' },
+  boton: { borderRadius: 14, overflow: 'hidden', marginTop: 4, marginBottom: 8 },
+  botonGradiente: { padding: 16, alignItems: 'center' },
   botonTexto: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
-  separador: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 10 },
+  separador: { flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 10 },
   separadorLinea: { flex: 1, height: 1, backgroundColor: '#1E2540' },
   separadorTexto: { fontSize: 12, color: '#6B7280' },
-  botonGoogle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 16, marginBottom: 24 },
+  botonGoogle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 14, marginBottom: 18 },
   googleG: { fontSize: 18, fontWeight: '800', color: '#4285F4' },
   botonGoogleTexto: { color: '#F8FAFC', fontSize: 15, fontWeight: '600' },
-  botonRegistro: { backgroundColor: '#161B2E', padding: 18, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2D3343' },
+  botonRegistro: { backgroundColor: '#161B2E', padding: 16, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2D3343' },
   botonRegistroTexto: { color: '#8B5CF6', fontSize: 15, fontWeight: '600' },
 });

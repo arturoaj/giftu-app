@@ -6,12 +6,15 @@ import { useState } from 'react';
 import { Alert, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../firebaseConfig';
 import { useIdioma } from '../IdiomaContext';
+import { registroEstado } from '../registroEstado';
 
 export default function Registro() {
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmar, setConfirmar] = useState('');
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [cargando, setCargando] = useState(false);
   const router = useRouter();
   const { t, idioma } = useIdioma();
@@ -42,32 +45,40 @@ export default function Registro() {
       return;
     }
     setCargando(true);
+    registroEstado.enProceso = true;
     try {
       const resultado = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(resultado.user, { displayName: nombre.trim() });
-      await setDoc(doc(db, 'usuarios', resultado.user.uid), {
-        nombre: nombre.trim(),
-        email: email.trim(),
-        creadoEn: new Date(),
-      });
-      await sendEmailVerification(resultado.user);
-      if (Platform.OS === 'web') {
-        window.alert(
-          idioma === 'es'
-            ? `✅ ¡Cuenta creada!\n\nTe enviamos un correo de verificación a ${email}. Revisa tu bandeja de entrada.`
-            : `✅ Account created!\n\nWe sent a verification email to ${email}. Check your inbox.`
-        );
-        router.replace('/(tabs)/dashboard');
-      } else {
-        Alert.alert(
-          '✅ ' + t.listo,
-          idioma === 'es'
-            ? `${t.cuentaCreada}\n\nTe enviamos un correo de verificación a ${email}.`
-            : `${t.cuentaCreada}\n\nWe sent a verification email to ${email}.`,
-          [{ text: t.ok, onPress: () => router.replace('/(tabs)/dashboard') }]
-        );
+
+      // A partir de aquí la cuenta YA existe en Firebase. Todo lo siguiente es
+      // "best effort": si algo falla, no se muestra como error, porque la cuenta
+      // de todas formas se creó correctamente.
+      try {
+        await updateProfile(resultado.user, { displayName: nombre.trim() });
+      } catch (e) {
+        console.log('No se pudo actualizar el perfil:', e);
       }
+
+      try {
+        await setDoc(doc(db, 'usuarios', resultado.user.uid), {
+          nombre: nombre.trim(),
+          email: email.trim(),
+          creadoEn: new Date(),
+        });
+      } catch (e) {
+        console.log('No se pudo guardar el usuario en Firestore:', e);
+      }
+
+      try {
+        await sendEmailVerification(resultado.user);
+      } catch (e) {
+        console.log('No se pudo enviar el correo de verificación:', e);
+      }
+
+      // En vez de una alerta de "cuenta creada", vamos directo al dashboard,
+      // que ya muestra el saludo de bienvenida con el nombre del usuario.
+      router.replace('/(tabs)/dashboard');
     } catch (error: any) {
+      // Este catch SOLO se dispara si falla la creación de la cuenta en sí.
       if (error.code === 'auth/email-already-in-use') {
         mostrarAlerta(t.error, t.correoEnUso);
       } else if (error.code === 'auth/weak-password') {
@@ -76,6 +87,7 @@ export default function Registro() {
         mostrarAlerta(t.error, idioma === 'es' ? 'No se pudo crear la cuenta' : 'Could not create account');
       }
     } finally {
+      registroEstado.enProceso = false;
       setCargando(false);
     }
   };
@@ -100,6 +112,30 @@ export default function Registro() {
           }
           .reg-input:focus { border-color: rgba(139,92,246,0.6); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
           .reg-input::placeholder { color: #4B5563; }
+          .reg-input-outer {
+            display: flex;
+            align-items: center;
+            background: rgba(22,27,46,0.95);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 0 14px;
+            transition: border-color 0.2s;
+          }
+          .reg-input-outer:focus-within { border-color: rgba(139,92,246,0.6); box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+          .reg-input-inner {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 14px 4px;
+            font-size: 15px;
+            color: #F8FAFC;
+            outline: none;
+            font-family: inherit;
+            width: 100%;
+          }
+          .reg-input-inner::placeholder { color: #4B5563; }
+          .eye-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); font-size: 16px; padding: 0; line-height: 1; flex-shrink: 0; }
+          .eye-btn:hover { color: rgba(255,255,255,0.7); }
           .btn-crear {
             width: 100%;
             padding: 15px;
@@ -205,8 +241,13 @@ export default function Registro() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>
                 🔒 {t.contrasena}
               </label>
-              <input className="reg-input" type="password" placeholder="••••••••"
-                value={password} onChange={(e: any) => setPassword(e.target.value)} />
+              <div className="reg-input-outer">
+                <input className="reg-input-inner" type={mostrarPassword ? 'text' : 'password'} placeholder="••••••••"
+                  value={password} onChange={(e: any) => setPassword(e.target.value)} />
+                <button type="button" className="eye-btn" onClick={() => setMostrarPassword(!mostrarPassword)}>
+                  {mostrarPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
               <p style={{ fontSize: 11, color: '#6B7280', marginTop: 6 }}>
                 {idioma === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
               </p>
@@ -217,10 +258,14 @@ export default function Registro() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#94A3B8', marginBottom: 8 }}>
                 🔒 {t.confirmarContrasena}
               </label>
-              <input className="reg-input" type="password" placeholder="••••••••"
-                value={confirmar} onChange={(e: any) => setConfirmar(e.target.value)}
-                style={{ borderColor: confirmar && password !== confirmar ? '#EF4444' : undefined }}
-                onKeyDown={(e: any) => e.key === 'Enter' && handleRegistro()} />
+              <div className="reg-input-outer" style={{ borderColor: confirmar && password !== confirmar ? '#EF4444' : undefined }}>
+                <input className="reg-input-inner" type={mostrarConfirmar ? 'text' : 'password'} placeholder="••••••••"
+                  value={confirmar} onChange={(e: any) => setConfirmar(e.target.value)}
+                  onKeyDown={(e: any) => e.key === 'Enter' && handleRegistro()} />
+                <button type="button" className="eye-btn" onClick={() => setMostrarConfirmar(!mostrarConfirmar)}>
+                  {mostrarConfirmar ? '🙈' : '👁️'}
+                </button>
+              </div>
               {confirmar && password !== confirmar && (
                 <p style={{ fontSize: 12, color: '#EF4444', marginTop: 6 }}>{t.contrasenasNoCoinciden}</p>
               )}
@@ -280,12 +325,36 @@ export default function Registro() {
           </View>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>🔒 {t.contrasena}</Text>
-            <TextInput style={styles.input} placeholder="••••••••" placeholderTextColor="#4B5563" value={password} onChangeText={setPassword} secureTextEntry />
+            <View style={styles.inputConOjo}>
+              <TextInput
+                style={styles.inputConOjoTexto}
+                placeholder="••••••••"
+                placeholderTextColor="#4B5563"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!mostrarPassword}
+              />
+              <TouchableOpacity onPress={() => setMostrarPassword(!mostrarPassword)}>
+                <Text style={styles.ojoEmoji}>{mostrarPassword ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.inputHint}>{idioma === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}</Text>
           </View>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>🔒 {t.confirmarContrasena}</Text>
-            <TextInput style={[styles.input, confirmar && password !== confirmar && styles.inputError]} placeholder="••••••••" placeholderTextColor="#4B5563" value={confirmar} onChangeText={setConfirmar} secureTextEntry />
+            <View style={[styles.inputConOjo, confirmar && password !== confirmar && styles.inputError]}>
+              <TextInput
+                style={styles.inputConOjoTexto}
+                placeholder="••••••••"
+                placeholderTextColor="#4B5563"
+                value={confirmar}
+                onChangeText={setConfirmar}
+                secureTextEntry={!mostrarConfirmar}
+              />
+              <TouchableOpacity onPress={() => setMostrarConfirmar(!mostrarConfirmar)}>
+                <Text style={styles.ojoEmoji}>{mostrarConfirmar ? '🙈' : '👁️'}</Text>
+              </TouchableOpacity>
+            </View>
             {confirmar && password !== confirmar && (
               <Text style={styles.errorTexto}>{t.contrasenasNoCoinciden}</Text>
             )}
@@ -326,6 +395,9 @@ const styles = StyleSheet.create({
   inputContainer: { marginBottom: 16 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', marginBottom: 8 },
   input: { backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 16, fontSize: 16, color: '#F8FAFC' },
+  inputConOjo: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, paddingHorizontal: 16 },
+  inputConOjoTexto: { flex: 1, paddingVertical: 16, fontSize: 16, color: '#F8FAFC' },
+  ojoEmoji: { fontSize: 18, marginLeft: 8 },
   inputError: { borderColor: '#EF4444' },
   inputHint: { fontSize: 11, color: '#6B7280', marginTop: 6 },
   errorTexto: { fontSize: 12, color: '#EF4444', marginTop: 6 },
