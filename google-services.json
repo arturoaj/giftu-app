@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "1022923587611",
+    "project_id": "giftreserve-66f0d",
+    "storage_bucket": "giftreserve-66f0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022923587611:android:a2b4758364539e2c94b8be",
+        "android_client_info": {
+          "package_name": "com.giftu.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1022923587611-gghdtcak3rs993n8drtpmdu7pka54hpt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.giftu.app",
+            "certificate_hash": "50179468486dd54027369d9c254486e9834bd9fb"
+          }
+        },
+        {
+          "client_id": "1022923587611-o7ak61h72n0g0e3u4qnhunhkhlqmn51o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDbMIYf-sQPW5E66vtv-qxGncitQbhN64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1022923587611-o7ak61h72n0g0e3u4qnhunhkhlqmn51o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1022923587611-0ci2ipb53t1digcpnabki3ievg6g10e9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.giftreserve"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022923587611:android:bf237666a966247a94b8be",
+        "android_client_info": {
+          "package_name": "com.mycompany.giftreserve"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1022923587611-4uh0u1gc7keqorredhcaonqt3961lbfn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.giftreserve",
+            "certificate_hash": "50179468486dd54027369d9c254486e9834bd9fb"
+          }
+        },
+        {
+          "client_id": "1022923587611-l9pqhfdv7fb6pjij5v1nufnuou86u95e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mycompany.giftreserve",
+            "certificate_hash": "9bbb3186b2189ef16d8f272bdab59362c395cbb4"
+          }
+        },
+        {
+          "client_id": "1022923587611-o7ak61h72n0g0e3u4qnhunhkhlqmn51o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDbMIYf-sQPW5E66vtv-qxGncitQbhN64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1022923587611-o7ak61h72n0g0e3u4qnhunhkhlqmn51o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1022923587611-0ci2ipb53t1digcpnabki3ievg6g10e9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mycompany.giftreserve"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,11 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { GoogleAuthProvider, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, sendPasswordResetEmail, signInWithCredential, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth } from '../../firebaseConfig';
 import { useAuth } from '../AuthContext';
 import { useIdioma } from '../IdiomaContext';
+
+// El "Web client ID" viene de: Firebase Console → Authentication → Sign-in method → Google → Configuración del SDK web
+const GOOGLE_WEB_CLIENT_ID = '1022923587611-o7ak61h72n0g0e3u4qnhunhkhlqmn51o.apps.googleusercontent.com';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -26,6 +29,15 @@ export default function Login() {
       }
     }
   }, [usuario]);
+
+  // Configura el Google Sign-In nativo una sola vez, solo en Android/iOS (nunca en web)
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    (async () => {
+      const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+      GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+    })();
+  }, []);
 
   const irARegistro = () => {
     router.push(codigoPendiente ? { pathname: '/(tabs)/registro', params: { codigo: codigoPendiente } } : '/(tabs)/registro');
@@ -77,15 +89,41 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      if (Platform.OS === 'web') {
+    // Versión web: se queda exactamente igual que antes
+    if (Platform.OS === 'web') {
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (error) {
         window.alert(idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
-      } else {
-        Alert.alert(t.error, idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
       }
+      return;
+    }
+
+    // Versión nativa (Android/iOS)
+    try {
+      const { GoogleSignin, isErrorWithCode, statusCodes } = await import('@react-native-google-signin/google-signin');
+
+      await GoogleSignin.hasPlayServices();
+      const respuesta: any = await GoogleSignin.signIn();
+      const idToken = respuesta?.data?.idToken ?? respuesta?.idToken;
+
+      if (!idToken) {
+        throw new Error('No se obtuvo el token de Google');
+      }
+
+      const credential = GoogleAuthProvider.credential(idToken);
+      await signInWithCredential(auth, credential);
+    } catch (error: any) {
+      // Si el usuario simplemente cerró la ventana de Google, no mostramos ningún error
+      try {
+        const { isErrorWithCode, statusCodes } = await import('@react-native-google-signin/google-signin');
+        if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) {
+          return;
+        }
+      } catch {}
+
+      Alert.alert(t.error, idioma === 'es' ? 'No se pudo iniciar con Google' : 'Could not sign in with Google');
     }
   };
 
@@ -356,6 +394,18 @@ export default function Login() {
             <Text style={styles.botonTexto}>{t.entrar}</Text>
           </LinearGradient>
         </TouchableOpacity>
+
+        <View style={styles.separador}>
+          <View style={styles.separadorLinea} />
+          <Text style={styles.separadorTexto}>{idioma === 'es' ? 'o continúa con' : 'or continue with'}</Text>
+          <View style={styles.separadorLinea} />
+        </View>
+
+        <TouchableOpacity style={styles.botonGoogle} onPress={handleGoogleLogin}>
+          <Text style={styles.googleG}>G</Text>
+          <Text style={styles.botonGoogleTexto}>{idioma === 'es' ? 'Continuar con Google' : 'Continue with Google'}</Text>
+        </TouchableOpacity>
+
         <View style={styles.separador}>
           <View style={styles.separadorLinea} />
           <Text style={styles.separadorTexto}>{idioma === 'es' ? '¿nuevo en Giftu?' : 'new to Giftu?'}</Text>
@@ -387,12 +437,15 @@ const styles = StyleSheet.create({
   inputContainer: { marginBottom: 16 },
   inputLabel: { fontSize: 13, fontWeight: '600', color: '#94A3B8', marginBottom: 8 },
   input: { backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 16, fontSize: 16, color: '#F8FAFC' },
-  boton: { borderRadius: 14, overflow: 'hidden', marginTop: 8, marginBottom: 24 },
+  boton: { borderRadius: 14, overflow: 'hidden', marginTop: 8, marginBottom: 8 },
   botonGradiente: { padding: 18, alignItems: 'center' },
   botonTexto: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
   separador: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 10 },
   separadorLinea: { flex: 1, height: 1, backgroundColor: '#1E2540' },
   separadorTexto: { fontSize: 12, color: '#6B7280' },
+  botonGoogle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#161B2E', borderWidth: 1, borderColor: '#2D3343', borderRadius: 14, padding: 16, marginBottom: 24 },
+  googleG: { fontSize: 18, fontWeight: '800', color: '#4285F4' },
+  botonGoogleTexto: { color: '#F8FAFC', fontSize: 15, fontWeight: '600' },
   botonRegistro: { backgroundColor: '#161B2E', padding: 18, borderRadius: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2D3343' },
   botonRegistroTexto: { color: '#8B5CF6', fontSize: 15, fontWeight: '600' },
 });
